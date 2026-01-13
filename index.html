@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VOCALOID BINGO</title>
+    <style>
+        /* --- RESET & BASE --- */
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* UI/UX ENHANCE: Dynamic background that changes subtly */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+            background-color: #e8e8e8;
+            color: #111;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            transition: background-color 0.5s ease;
+        }
+
+        /* UI/UX ENHANCE: VINGO phase background */
+        body.vingo-phase {
+            background-color: #ddd;
+        }
+
+        /* --- LAYOUT --- */
+        #app {
+            width: 100%;
+            max-width: 480px;
+            background-color: #fff;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            z-index: 10;
+        }
+
+        /* --- TYPOGRAPHY & HEADER --- */
+        header {
+            text-align: center;
+            margin-bottom: 12px;
+            border-bottom: 4px solid #111;
+            padding-bottom: 10px;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 900;
+            margin: 0;
+            letter-spacing: -1px;
+            line-height: 1.2;
+            text-transform: uppercase;
+        }
+
+        .subtitle {
+            font-size: 10px;
+            color: #666;
+            margin-top: 4px;
+            font-weight: normal;
+        }
+
+        /* ========================================
+           UI/UX ENHANCE: STEP INDICATOR
+           ======================================== */
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            margin-bottom: 12px;
+            font-size: 9px;
+            padding: 8px 0;
+            background: #fafafa;
+            border-radius: 4px;
+        }
+
+        .step {
+            color: #bbb;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .step::after {
+            content: '→';
+            color: #ddd;
+            margin-left: 3px;
+        }
+
+        .step:last-child::after {
+            content: '';
+        }
+
+        .step.active {
+            color: #111;
+            font-weight: 800;
+        }
+
+        .step.completed {
+            color: #888;
+        }
+
+        .step-num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #eee;
+            font-size: 8px;
+            font-weight: 800;
+        }
+
+        .step.active .step-num {
+            background: #111;
+            color: #fff;
+        }
+
+        .step.completed .step-num {
+            background: #ccc;
+            color: #fff;
+        }
+
+        /* --- STATUS BAR --- */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 12px;
+            font-weight: bold;
+            border: 1px solid #ddd;
+            padding: 6px 10px;
+            background: #fafafa;
+            transition: opacity 0.3s ease;
+        }
+
+        /* UI/UX ENHANCE: Dim status bar when in check phase */
+        .focus-grid .status-bar {
+            opacity: 0.6;
+        }
+
+        .status-value {
+            color: #111;
+            background: #eee;
+            padding: 2px 8px;
+            border-radius: 2px;
+            font-size: 11px;
+        }
+
+        .status-value.unlocked {
+            color: #555;
+        }
+
+        .status-value.locked {
+            color: #fff;
+            background: #111;
+        }
+
+        /* ========================================
+           UI/UX ENHANCE: CONTROLS CARD
+           ======================================== */
+        .controls-card {
+            background: #f5f5f5;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            transition: opacity 0.3s ease;
+        }
+
+        /* UI/UX ENHANCE: Dim controls when in check phase */
+        .focus-grid .controls-card {
+            opacity: 0.5;
+        }
+
+        .controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px 6px;
+            font-size: 13px;
+            font-weight: 800;
+            border: 2px solid #111;
+            background: #fff;
+            color: #111;
+            cursor: pointer;
+            transition: all 0.12s ease;
+            box-shadow: 2px 2px 0 #111;
+            border-radius: 3px;
+        }
+
+        button:active {
+            transform: translate(2px, 2px);
+            box-shadow: none;
+        }
+
+        button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+            border-color: #999;
+            color: #999;
+        }
+
+        #btn-lock {
+            background: #111;
+            color: #fff;
+        }
+
+        #btn-lock:disabled {
+            background: #ccc;
+            border-color: #ccc;
+        }
+
+        /* --- HINT TEXT --- */
+        .hint-text {
+            font-size: 10px;
+            color: #999;
+            text-align: center;
+            margin-bottom: 10px;
+            min-height: 14px;
+            transition: opacity 0.3s ease;
+        }
+
+        .hint-text.warning {
+            color: #c00;
+        }
+
+        /* UI/UX ENHANCE: Dim hint in focus mode */
+        .focus-grid .hint-text {
+            opacity: 0.5;
+        }
+
+        /* ========================================
+           PHASE 2: VINGO BANNER (Screenshot-Ready)
+           ======================================== */
+        .vingo-banner-container {
+            min-height: 56px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .vingo-banner {
+            width: 100%;
+            background: linear-gradient(180deg, #f0f0f0 0%, #e0e0e0 100%);
+            border: 3px solid #111;
+            padding: 8px 12px;
+            text-align: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+            border-radius: 4px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .vingo-banner.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .vingo-banner-text {
+            font-size: 28px;
+            font-weight: 900;
+            color: #111;
+            letter-spacing: 2px;
+            margin: 0;
+            line-height: 1;
+        }
+
+        .vingo-banner-sub {
+            font-size: 11px;
+            color: #555;
+            margin-top: 4px;
+        }
+
+        /* VINGO Timestamp (Evidence) */
+        .vingo-timestamp {
+            font-size: 10px;
+            color: #777;
+            margin-top: 6px;
+            display: none;
+            text-align: right;
+            width: 100%;
+            padding-right: 4px;
+            font-family: monospace;
+        }
+
+        /* --- SCREENSHOT HINT --- */
+        .screenshot-hint {
+            display: none;
+            text-align: center;
+            background: #fffbe6;
+            border: 1px dashed #aaa;
+            padding: 8px;
+            margin-bottom: 8px;
+            font-size: 11px;
+            color: #444;
+            line-height: 1.4;
+            border-radius: 4px;
+        }
+
+        .screenshot-hint.visible {
+            display: block;
+        }
+
+        /* ========================================
+           UI/UX ENHANCE: GRID CARD (Layered Design)
+           ======================================== */
+        .grid-card {
+            background: #fafafa;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 12px;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+            transition: box-shadow 0.4s ease, background 0.4s ease;
+        }
+
+        /* UI/UX ENHANCE: Enhance grid card when focused */
+        .focus-grid .grid-card {
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+            background: #fff;
+        }
+
+        /* UI/UX ENHANCE: VINGO phase styling */
+        body.vingo-phase .grid-card {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .grid-container {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 6px;
+        }
+
+        /* ========================================
+           UI/UX ENHANCE: CELL TAP FEEDBACK
+           ======================================== */
+        .cell {
+            border: 2px solid #444;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            line-height: 1.2;
+            user-select: none;
+            cursor: pointer;
+            background: #fff;
+            overflow: hidden;
+            position: relative;
+            transition: transform 0.1s ease, box-shadow 0.15s ease, background 0.2s ease;
+            min-height: 44px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        /* UI/UX ENHANCE: Tap feedback - press effect */
+        .cell:active {
+            transform: scale(0.96);
+        }
+
+        /* UI/UX ENHANCE: Hover effect for desktop */
+        .cell:hover:not(.empty) {
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* UI/UX ENHANCE: Cells ready for interaction after lock */
+        .grid-interactive .cell:not(.empty) {
+            border-color: #222;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        }
+
+        .cell span {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            word-break: break-all;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* UI/UX ENHANCE: Marked cell with stronger visual */
+        .cell.marked {
+            background: rgba(255, 220, 220, 0.7);
+            border-color: #c44;
+        }
+
+        .cell.marked::after {
+            content: '';
+            position: absolute;
+            width: 65%;
+            height: 65%;
+            border: 4px solid #e02020;
+            border-radius: 50%;
+            opacity: 0.9;
+            pointer-events: none;
+            z-index: 0;
+            animation: markPop 0.2s ease-out;
+        }
+
+        /* UI/UX ENHANCE: Mark animation */
+        @keyframes markPop {
+            0% {
+                transform: scale(0.7);
+                opacity: 0;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 0.9;
+            }
+        }
+
+        .cell.empty {
+            color: #ccc;
+            border-color: #ddd;
+            cursor: default;
+            background: #f8f8f8;
+        }
+
+        /* Bingo Line Highlight */
+        .cell.bingo-line {
+            border: 4px solid #111 !important;
+            background: rgba(255, 255, 180, 0.7) !important;
+            box-shadow: inset 0 0 0 2px #fff, 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        /* --- SNS SECTION --- */
+        .sns-section {
+            display: none;
+            background: #fafafa;
+            border: 1px solid #eee;
+            padding: 12px;
+            margin-bottom: 10px;
+            text-align: center;
+            border-radius: 6px;
+        }
+
+        .sns-section.visible {
+            display: block;
+        }
+
+        .sns-title {
+            font-size: 12px;
+            font-weight: 800;
+            color: #111;
+            margin-bottom: 8px;
+        }
+
+        .sns-steps {
+            font-size: 10px;
+            color: #555;
+            line-height: 1.5;
+            margin-bottom: 10px;
+            text-align: left;
+            background: #fff;
+            padding: 8px 10px;
+            border-radius: 4px;
+        }
+
+        .sns-steps p {
+            margin: 0 0 2px 0;
+        }
+
+        .sns-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .sns-btn {
+            display: block;
+            padding: 10px 12px;
+            font-size: 11px;
+            font-weight: 800;
+            text-decoration: none;
+            border: 2px solid #111;
+            background: #fff;
+            color: #111;
+            text-align: center;
+            box-shadow: 2px 2px 0 #111;
+            transition: all 0.1s ease;
+            border-radius: 3px;
+        }
+
+        .sns-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: none;
+        }
+
+        .sns-btn.twitter {
+            background: #111;
+            color: #fff;
+        }
+
+        /* --- REPLAY BUTTON --- */
+        #btn-replay {
+            display: none;
+            margin-bottom: 8px;
+            background: #f5f5f5;
+            border: 1px solid #ccc;
+            color: #555;
+            box-shadow: none;
+            font-size: 11px;
+            padding: 8px;
+        }
+
+        #btn-replay.visible {
+            display: block;
+        }
+
+        /* --- RESET BUTTON --- */
+        #btn-reset {
+            border: 1px solid #ccc;
+            color: #555;
+            padding: 10px;
+            font-size: 11px;
+            box-shadow: none;
+            background: #fdfdfd;
+        }
+
+        #btn-reset:active {
+            transform: translateY(1px);
+        }
+
+        /* --- FOOTER --- */
+        footer {
+            margin-top: auto;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+            font-size: 10px;
+            color: #666;
+            line-height: 1.5;
+            transition: opacity 0.3s ease;
+        }
+
+        /* UI/UX ENHANCE: Dim footer when focused */
+        .focus-grid footer {
+            opacity: 0.5;
+        }
+
+        .instructions {
+            background: #fafafa;
+            padding: 8px 10px;
+            border-radius: 4px;
+        }
+
+        .instructions h3 {
+            font-size: 10px;
+            margin: 0 0 5px 0;
+            color: #111;
+        }
+
+        .instructions ul {
+            margin: 0;
+            padding-left: 0;
+            list-style: none;
+        }
+
+        .instructions li {
+            margin-bottom: 2px;
+            font-size: 10px;
+        }
+
+        .fair-play-notice {
+            margin-top: 8px;
+            padding: 6px 8px;
+            background: #fffbe6;
+            border: 1px dashed #ccc;
+            border-radius: 4px;
+            font-size: 10px;
+            color: #666;
+            line-height: 1.4;
+            text-align: center;
+        }
+
+        .footer-note {
+            margin-top: 8px;
+            text-align: center;
+            color: #aaa;
+            font-size: 9px;
+        }
+
+        /* ========================================
+           PHASE 1: CELEBRATION OVERLAY
+           ======================================== */
+        #celebration-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.88);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            pointer-events: none;
+        }
+
+        #celebration-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .celebration-text {
+            font-size: 22vw;
+            font-weight: 900;
+            color: #111;
+            text-shadow:
+                3px 3px 0 #ddd,
+                -1px -1px 0 #fff,
+                1px -1px 0 #fff,
+                -1px 1px 0 #fff,
+                0 0 30px rgba(255, 255, 255, 0.8);
+            animation: celebrationBounce 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            z-index: 1001;
+        }
+
+        @keyframes celebrationBounce {
+            0% {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+
+            60% {
+                transform: scale(1.1);
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Confetti Canvas */
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1002;
+            display: none;
+        }
+
+        #confetti-canvas.active {
+            display: block;
+        }
+
+        /* --- RESPONSIVE (320px) --- */
+        @media (max-width: 360px) {
+            #app {
+                padding: 10px;
+            }
+
+            h1 {
+                font-size: 20px;
+            }
+
+            .vingo-banner-text {
+                font-size: 24px;
+            }
+
+            .vingo-banner-container {
+                min-height: 48px;
+            }
+
+            .cell {
+                font-size: 9px;
+                padding: 2px;
+            }
+
+            button {
+                font-size: 11px;
+                padding: 10px 4px;
+            }
+
+            .celebration-text {
+                font-size: 18vw;
+            }
+
+            .step-indicator {
+                font-size: 8px;
+                gap: 4px;
+            }
+
+            .step-num {
+                width: 12px;
+                height: 12px;
+                font-size: 7px;
+            }
+
+            .grid-card {
+                padding: 6px;
+            }
+
+            .controls-card {
+                padding: 6px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="app">
+        <header>
+            <h1>Vocaloid<br>↓ Bingo. ↓</h1>
+            <div class="subtitle">3×3 ビンゴカード</div>
+        </header>
+
+        <!-- UI/UX ENHANCE: Step Indicator -->
+        <div class="step-indicator" id="step-indicator">
+            <div class="step active" data-step="1">
+                <span class="step-num">1</span>カード作成
+            </div>
+            <div class="step" data-step="2">
+                <span class="step-num">2</span>確定
+            </div>
+            <div class="step" data-step="3">
+                <span class="step-num">3</span>チェック
+            </div>
+            <div class="step" data-step="4">
+                <span class="step-num">4</span>VINGO!
+            </div>
+        </div>
+
+        <div class="status-bar">
+            <span>状態</span>
+            <span id="status-text" class="status-value unlocked">未確定</span>
+        </div>
+
+        <!-- UI/UX ENHANCE: Controls Card -->
+        <div class="controls-card">
+            <div class="controls">
+                <button id="btn-random">ランダム</button>
+                <button id="btn-lock" disabled>確定</button>
+            </div>
+        </div>
+
+        <div id="hint-text" class="hint-text"></div>
+
+        <!-- PHASE 2: VINGO Banner (Screenshot-Ready) -->
+        <div class="vingo-banner-container">
+            <div id="vingo-banner" class="vingo-banner">
+                <p class="vingo-banner-text">VINGO!</p>
+                <div class="vingo-banner-sub">↓ ビンゴ達成！↓</div>
+                <div id="vingo-timestamp" class="vingo-timestamp"></div>
+            </div>
+        </div>
+
+        <!-- Screenshot Hint -->
+        <div id="screenshot-hint" class="screenshot-hint">
+            📸 この画面をスクショしてね！<br>
+            <small>VINGO！とビンゴ状況が写ります</small>
+        </div>
+
+        <!-- Replay Celebration Button -->
+        <button id="btn-replay">🎉 演出をもう一度見る</button>
+
+        <!-- UI/UX ENHANCE: Grid Card -->
+        <div class="grid-card" id="grid-card">
+            <div class="grid-container" id="grid"></div>
+        </div>
+
+        <!-- SNS Section -->
+        <div id="sns-section" class="sns-section">
+            <div class="sns-title">スクショをDMで送ってね！</div>
+            <div class="sns-steps">
+                <p>① 上の画面をスクリーンショット</p>
+                <p>② 下のボタンから かい のSNSへ</p>
+                <p>③ DMにスクショを貼って送信</p>
+            </div>
+            <div class="sns-buttons">
+                <a href="https://x.com/ka1note_D" target="_blank" rel="noopener noreferrer" class="sns-btn twitter">
+                    X（Twitter）で送る →
+                </a>
+                <a href="https://www.instagram.com/ka1note/" target="_blank" rel="noopener noreferrer" class="sns-btn">
+                    Instagramで送る →
+                </a>
+            </div>
+        </div>
+
+        <button id="btn-reset">リセット</button>
+
+        <footer>
+            <div class="instructions">
+                <h3>遊び方</h3>
+                <ul>
+                    <li>①［ランダム］で9曲を表示</li>
+                    <li>②［確定］でカードを固定</li>
+                    <li>③ 曲が流れたらマスをタップして○</li>
+                    <li>④ 1列そろうと「VINGO！」</li>
+                    <li>やり直すときは［リセット］</li>
+                </ul>
+            </div>
+            <div class="fair-play-notice">
+                ズルはしないでね！あくまでもお楽しみ企画的なものなので！
+            </div>
+            <div class="footer-note">Vocaloid Dance Hall 2026</div>
+        </footer>
+    </div>
+
+    <!-- PHASE 1: Celebration Overlay -->
+    <div id="celebration-overlay">
+        <div id="celebration-text" class="celebration-text">VINGO!</div>
+    </div>
+
+    <!-- Confetti Canvas -->
+    <canvas id="confetti-canvas"></canvas>
+
+    <script>
+    /* ========================================
+       DATA: 50 SONGS (DO NOT MODIFY)
+       ======================================== */
+    const songsMaster = [
+        { id: 1, title: '千本桜' },
+        { id: 2, title: 'メルト' },
+        { id: 3, title: 'ワールドイズマイン' },
+        { id: 4, title: 'みくみくにしてあげる♪' }, 
+        { id: 5, title: '初音ミクの消失' },
+        { id: 6, title: 'ロミオとシンデレラ' },
+        { id: 7, title: 'マトリョシカ' },
+        { id: 8, title: '裏表ラバーズ' },
+        { id: 9, title: 'ローリンガール' },
+        { id: 10, title: 'ダブルラリアット' },
+        { id: 11, title: 'ハッピーシンセサイザ' },
+        { id: 12, title: 'ルカルカ★ナイトフィーバー' },
+        { id: 13, title: 'Just Be Friends' },
+        { id: 14, title: 'magnet' },
+        { id: 15, title: 'トリノコシティ' },
+        { id: 16, title: 'パンダヒーロー' },
+        { id: 17, title: 'モザイクロール' },
+        { id: 18, title: '千年の独奏歌' },
+        { id: 19, title: 'カゲロウデイズ' },
+        { id: 20, title: 'チルドレンレコード' },
+        { id: 21, title: '六兆年と一夜物語' },
+        { id: 22, title: '脳漿炸裂ガール' },
+        { id: 23, title: 'からくりピエロ' },
+        { id: 24, title: '天ノ弱' },
+        { id: 25, title: 'サンドリヨン' },
+        { id: 26, title: '恋愛裁判' },
+        { id: 27, title: '妄想税' },
+        { id: 28, title: 'ヒバナ' },
+        { id: 29, title: 'シャルル' },
+        { id: 30, title: '妄想感傷代償連盟' },
+        { id: 31, title: 'アンノウン・マザーグース' },
+        { id: 32, title: '砂の惑星' },
+        { id: 33, title: 'いーあるふぁんくらぶ' },
+        { id: 34, title: '神のまにまに' },
+        { id: 35, title: '夜咄ディセイブ' },
+        { id: 36, title: 'ゴーストルール' },
+        { id: 37, title: 'ECHO' },
+        { id: 38, title: 'Heart Beats' },
+        { id: 39, title: 'Tell Your World' },
+        { id: 40, title: 'ODDS&ENDS' },
+        { id: 41, title: 'Calc.' },
+        { id: 42, title: 'リリリリ★バーニングナイト' },
+        { id: 43, title: 'トエト' },
+        { id: 44, title: 'Alice' },
+        { id: 45, title: '恋は戦争' },
+        { id: 46, title: 'ハロ／ハワユ' },
+        { id: 47, title: '弱虫モンブラン' },
+        { id: 48, title: '心拍数#0822' },
+        { id: 49, title: '1925' },
+        { id: 50, title: 'ボカロメドレー(仮)' }
+    ];
+
+    /* ========================================
+       STATE MANAGEMENT
+       ======================================== */
+    const state = {
+        grid: [],
+        locked: false,
+        marks: new Array(9).fill(false),
+        bingo: false,
+        bingoLines: [],
+        bingoAchievedAt: null,
+        celebrationShown: false,
+        confettiRunning: false
+    };
+
+    /* ========================================
+       CONSTANTS
+       ======================================== */
+    const CELEBRATION_DURATION = 1400;
+
+    /* ========================================
+       DOM ELEMENTS
+       ======================================== */
+    const els = {
+        app: document.getElementById('app'),
+        grid: document.getElementById('grid'),
+        gridCard: document.getElementById('grid-card'),
+        btnRandom: document.getElementById('btn-random'),
+        btnLock: document.getElementById('btn-lock'),
+        btnReset: document.getElementById('btn-reset'),
+        btnReplay: document.getElementById('btn-replay'),
+        statusText: document.getElementById('status-text'),
+        hintText: document.getElementById('hint-text'),
+        vingoBanner: document.getElementById('vingo-banner'),
+        vingoTimestamp: document.getElementById('vingo-timestamp'),
+        snsSection: document.getElementById('sns-section'),
+        screenshotHint: document.getElementById('screenshot-hint'),
+        celebrationOverlay: document.getElementById('celebration-overlay'),
+        celebrationText: document.getElementById('celebration-text'),
+        confettiCanvas: document.getElementById('confetti-canvas'),
+        stepIndicator: document.getElementById('step-indicator')
+    };
+
+    /* ========================================
+       BINGO LINE DEFINITIONS
+       ======================================== */
+    const BINGO_LINES = [
+        [0, 1, 2], [3, 4, 5], [6, 7, 8],
+        [0, 3, 6], [1, 4, 7], [2, 5, 8],
+        [0, 4, 8], [2, 4, 6]
+    ];
+
+    /* ========================================
+       CORE LOGIC
+       ======================================== */
+    
+    function init() {
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        render();
+        updateHint();
+        updateStepIndicator();
+    }
+
+    function resizeCanvas() {
+        els.confettiCanvas.width = window.innerWidth;
+        els.confettiCanvas.height = window.innerHeight;
+    }
+
+    function randomize() {
+        if (state.locked) return;
+        
+        if (songsMaster.length < 9) {
+            alert('曲数が足りません（9曲以上必要）');
+            return;
+        }
+        
+        const shuffled = [...songsMaster];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        
+        state.grid = shuffled.slice(0, 9);
+        state.marks.fill(false);
+        state.bingo = false;
+        state.bingoLines = [];
+        state.bingoAchievedAt = null;
+        state.celebrationShown = false;
+        
+        // UI/UX ENHANCE: Subtle visual variation on randomize
+        applySubtleVariation();
+        
+        render();
+        updateHint();
+        updateStepIndicator();
+    }
+
+    // UI/UX ENHANCE: Apply subtle visual variation
+    function applySubtleVariation() {
+        const variations = [
+            { bg: '#e8e8e8', shadow: '0 3px 12px rgba(0,0,0,0.06)' },
+            { bg: '#eaeaea', shadow: '0 4px 14px rgba(0,0,0,0.07)' },
+            { bg: '#e6e6e6', shadow: '0 3px 10px rgba(0,0,0,0.05)' }
+        ];
+        const v = variations[Math.floor(Math.random() * variations.length)];
+        document.body.style.backgroundColor = v.bg;
+        els.gridCard.style.boxShadow = v.shadow;
+    }
+
+    function lock() {
+        if (!state.grid || state.grid.length === 0) {
+            showHint('先に［ランダム］を押してください', true);
+            return;
+        }
+        if (state.locked) return;
+        
+        state.locked = true;
+        
+        // UI/UX ENHANCE: Enable focus mode
+        els.app.classList.add('focus-grid');
+        els.grid.classList.add('grid-interactive');
+        
+        render();
+        updateHint();
+        updateStepIndicator();
+    }
+
+    function reset() {
+        if (confirm('盤面をリセットしますか？')) {
+            state.grid = [];
+            state.locked = false;
+            state.marks.fill(false);
+            state.bingo = false;
+            state.bingoLines = [];
+            state.bingoAchievedAt = null;
+            state.celebrationShown = false;
+            state.confettiRunning = false;
+            
+            // UI/UX ENHANCE: Remove focus mode
+            els.app.classList.remove('focus-grid');
+            els.grid.classList.remove('grid-interactive');
+            document.body.classList.remove('vingo-phase');
+            
+            stopConfetti();
+            hideCelebration();
+            render();
+            updateHint();
+            updateStepIndicator();
+        }
+    }
+
+    function toggleMark(index) {
+        if (!state.locked) {
+            showHint('※○を付けるには［確定］が必要です', true);
+            return;
+        }
+        
+        const wasBingo = state.bingo;
+        state.marks[index] = !state.marks[index];
+        checkBingo();
+        
+        if (state.bingo && !wasBingo && !state.celebrationShown) {
+            showCelebration();
+        }
+        
+        if (!state.bingo && wasBingo) {
+            state.celebrationShown = false;
+            document.body.classList.remove('vingo-phase');
+        }
+        
+        render();
+        updateStepIndicator();
+    }
+
+    function checkBingo() {
+        const winningLines = [];
+        for (let i = 0; i < BINGO_LINES.length; i++) {
+            const line = BINGO_LINES[i];
+            if (line.every(idx => state.marks[idx])) {
+                winningLines.push(i);
+            }
+        }
+        
+        state.bingoLines = winningLines;
+        state.bingo = winningLines.length > 0;
+
+        if (state.bingo && !state.bingoAchievedAt) {
+            state.bingoAchievedAt = new Date();
+        }
+    }
+
+    function getHighlightedCells() {
+        const cells = new Set();
+        for (const lineIdx of state.bingoLines) {
+            for (const cellIdx of BINGO_LINES[lineIdx]) {
+                cells.add(cellIdx);
+            }
+        }
+        return cells;
+    }
+
+    function formatDate(date) {
+        if (!date) return '';
+        // Handle string dates (from JSON parse)
+        if (typeof date === 'string') {
+            date = new Date(date);
+        }
+        const y = date.getFullYear();
+        const m = (date.getMonth() + 1).toString().padStart(2, '0');
+        const d = date.getDate().toString().padStart(2, '0');
+        const hour = date.getHours().toString().padStart(2, '0');
+        const min = date.getMinutes().toString().padStart(2, '0');
+        return `${y}/${m}/${d} ${hour}:${min}`;
+    }
+
+    // UI/UX ENHANCE: Update step indicator
+    function updateStepIndicator() {
+        const steps = els.stepIndicator.querySelectorAll('.step');
+        let currentStep = 1;
+        
+        if (state.bingo) {
+            currentStep = 4;
+        } else if (state.locked) {
+            currentStep = 3;
+        } else if (state.grid.length > 0) {
+            currentStep = 2;
+        }
+        
+        steps.forEach((step, idx) => {
+            const stepNum = idx + 1;
+            step.classList.remove('active', 'completed');
+            
+            if (stepNum < currentStep) {
+                step.classList.add('completed');
+            } else if (stepNum === currentStep) {
+                step.classList.add('active');
+            }
+        });
+    }
+
+    /* ========================================
+       COLORFUL SIDE-CRACKER CONFETTI
+       ======================================== */
+    let confettiAnimationFrame = null;
+    let particles = [];
+    
+    const ACCENT_COLORS = [
+        '#00E5FF', '#00B8D4',
+        '#FF2DD6', '#FF4FD8',
+        '#7C4DFF', '#FFD400'
+    ];
+    
+    const GRAY_COLORS = [
+        '#ffffff', '#f5f5f5', '#eeeeee', '#e0e0e0', '#d5d5d5'
+    ];
+
+    function startConfetti() {
+        if (state.confettiRunning) return;
+        state.confettiRunning = true;
+        
+        particles = [];
+        const canvas = els.confettiCanvas;
+        const ctx = canvas.getContext('2d');
+        
+        canvas.classList.add('active');
+        
+        const textRect = els.celebrationText.getBoundingClientRect();
+        const centerY = textRect.top + textRect.height / 2;
+        const leftX = textRect.left;
+        const rightX = textRect.right;
+        
+        const particleCount = 60;
+        const sparkCount = 16;
+        const gravity = 0.15;
+        
+        function getParticleColor() {
+            if (Math.random() < 0.7) {
+                return { color: GRAY_COLORS[Math.floor(Math.random() * GRAY_COLORS.length)], isAccent: false };
+            } else {
+                return { color: ACCENT_COLORS[Math.floor(Math.random() * ACCENT_COLORS.length)], isAccent: true };
+            }
+        }
+        
+        for (let i = 0; i < particleCount / 2; i++) {
+            const { color, isAccent } = getParticleColor();
+            particles.push({
+                type: 'confetti',
+                x: leftX + Math.random() * 20,
+                y: centerY + (Math.random() - 0.5) * 30,
+                vx: Math.random() * 7 + 3,
+                vy: -(Math.random() * 9 + 4),
+                size: Math.random() * 7 + 4,
+                color: color,
+                isAccent: isAccent,
+                rotation: Math.random() * 360,
+                rotationSpeed: (Math.random() - 0.5) * 12,
+                life: 1.0,
+                gravity: gravity
+            });
+        }
+        
+        for (let i = 0; i < particleCount / 2; i++) {
+            const { color, isAccent } = getParticleColor();
+            particles.push({
+                type: 'confetti',
+                x: rightX - Math.random() * 20,
+                y: centerY + (Math.random() - 0.5) * 30,
+                vx: -(Math.random() * 7 + 3),
+                vy: -(Math.random() * 9 + 4),
+                size: Math.random() * 7 + 4,
+                color: color,
+                isAccent: isAccent,
+                rotation: Math.random() * 360,
+                rotationSpeed: (Math.random() - 0.5) * 12,
+                life: 1.0,
+                gravity: gravity
+            });
+        }
+        
+        for (let i = 0; i < sparkCount / 2; i++) {
+            const sparkColor = ACCENT_COLORS[Math.floor(Math.random() * 3)];
+            particles.push({
+                type: 'spark',
+                x: leftX,
+                y: centerY,
+                vx: Math.random() * 10 + 5,
+                vy: -(Math.random() * 12 + 6),
+                length: Math.random() * 15 + 8,
+                color: sparkColor,
+                life: 1.0,
+                gravity: gravity * 0.8
+            });
+        }
+        
+        for (let i = 0; i < sparkCount / 2; i++) {
+            const sparkColor = ACCENT_COLORS[Math.floor(Math.random() * 3)];
+            particles.push({
+                type: 'spark',
+                x: rightX,
+                y: centerY,
+                vx: -(Math.random() * 10 + 5),
+                vy: -(Math.random() * 12 + 6),
+                length: Math.random() * 15 + 8,
+                color: sparkColor,
+                life: 1.0,
+                gravity: gravity * 0.8
+            });
+        }
+
+        let startTime = performance.now();
+        const duration = 1300;
+
+        function draw(currentTime) {
+            const elapsed = currentTime - startTime;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            particles.forEach((p) => {
+                p.vy += p.gravity;
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vx *= 0.99;
+                
+                if (elapsed > duration * 0.6) {
+                    p.life -= 0.025;
+                }
+                
+                if (p.life <= 0) return;
+                
+                ctx.save();
+                ctx.globalAlpha = Math.min(p.life, 0.95);
+                
+                if (p.type === 'confetti') {
+                    p.rotation += p.rotationSpeed;
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.rotation * Math.PI / 180);
+                    
+                    if (p.isAccent) {
+                        ctx.shadowColor = p.color;
+                        ctx.shadowBlur = 8;
+                    }
+                    
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
+                    
+                } else if (p.type === 'spark') {
+                    ctx.strokeStyle = p.color;
+                    ctx.lineWidth = 2;
+                    ctx.shadowColor = p.color;
+                    ctx.shadowBlur = 6;
+                    
+                    const angle = Math.atan2(p.vy, p.vx);
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(angle);
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(-p.length, 0);
+                    ctx.stroke();
+                }
+                
+                ctx.restore();
+            });
+            
+            particles = particles.filter(p => p.life > 0 && p.y < canvas.height + 50);
+            
+            if (elapsed < duration && particles.length > 0) {
+                confettiAnimationFrame = requestAnimationFrame(draw);
+            } else {
+                stopConfetti();
+            }
+        }
+        
+        confettiAnimationFrame = requestAnimationFrame(draw);
+    }
+
+    function stopConfetti() {
+        if (confettiAnimationFrame) {
+            cancelAnimationFrame(confettiAnimationFrame);
+            confettiAnimationFrame = null;
+        }
+        particles = [];
+        const canvas = els.confettiCanvas;
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        canvas.classList.remove('active');
+        state.confettiRunning = false;
+    }
+
+    /* ========================================
+       DISPLAY LOGIC
+       ======================================== */
+    
+    function showCelebration() {
+        state.celebrationShown = true;
+        els.celebrationOverlay.classList.add('visible');
+        
+        // UI/UX ENHANCE: VINGO phase styling
+        document.body.classList.add('vingo-phase');
+        
+        setTimeout(() => startConfetti(), 200);
+        setTimeout(() => hideCelebration(), CELEBRATION_DURATION);
+    }
+
+    function hideCelebration() {
+        els.celebrationOverlay.classList.remove('visible');
+        stopConfetti();
+    }
+
+    function replayCelebration() {
+        if (!state.bingo) return;
+        stopConfetti();
+        els.celebrationOverlay.classList.add('visible');
+        setTimeout(() => startConfetti(), 200);
+        setTimeout(() => hideCelebration(), CELEBRATION_DURATION);
+    }
+
+    function showHint(message, isWarning = false) {
+        els.hintText.textContent = message;
+        els.hintText.className = isWarning ? 'hint-text warning' : 'hint-text';
+        if (isWarning) setTimeout(() => updateHint(), 2000);
+    }
+
+    function updateHint() {
+        if (state.grid.length === 0) {
+            showHint('［ランダム］を押して開始');
+        } else if (!state.locked) {
+            showHint('［確定］でカードを固定してください');
+        } else {
+            showHint('曲が流れたらマスをタップ');
+        }
+    }
+
+    function render() {
+        els.statusText.textContent = state.locked ? '確定済み' : '未確定';
+        els.statusText.className = `status-value ${state.locked ? 'locked' : 'unlocked'}`;
+
+        els.btnRandom.disabled = state.locked;
+        els.btnLock.disabled = state.locked || !state.grid || state.grid.length === 0;
+
+        const highlightedCells = getHighlightedCells();
+        els.grid.innerHTML = '';
+        if (!state.grid || state.grid.length === 0) {
+            for (let i = 0; i < 9; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell empty';
+                cell.textContent = '−';
+                els.grid.appendChild(cell);
+            }
+        } else {
+            state.grid.forEach((song, i) => {
+                const cell = document.createElement('div');
+                let classNames = 'cell';
+                if (state.marks[i]) classNames += ' marked';
+                if (highlightedCells.has(i)) classNames += ' bingo-line';
+                cell.className = classNames;
+                
+                const span = document.createElement('span');
+                span.textContent = song.title;
+                cell.appendChild(span);
+
+                cell.onclick = () => toggleMark(i);
+                els.grid.appendChild(cell);
+            });
+        }
+
+        if (state.bingo) {
+            els.vingoBanner.classList.add('visible');
+            els.screenshotHint.classList.add('visible');
+            els.snsSection.classList.add('visible');
+            els.btnReplay.classList.add('visible');
+            
+            if (state.bingoAchievedAt) {
+                els.vingoTimestamp.textContent = `VINGO達成：${formatDate(state.bingoAchievedAt)}`;
+                els.vingoTimestamp.style.display = 'block';
+            }
+        } else {
+            els.vingoBanner.classList.remove('visible');
+            els.screenshotHint.classList.remove('visible');
+            els.snsSection.classList.remove('visible');
+            els.btnReplay.classList.remove('visible');
+            els.vingoTimestamp.style.display = 'none';
+        }
+    }
+
+    // Events
+    els.btnRandom.addEventListener('click', randomize);
+    els.btnLock.addEventListener('click', lock);
+    els.btnReset.addEventListener('click', reset);
+    els.btnReplay.addEventListener('click', replayCelebration);
+
+    // Diagnostics
+    window.runDiagnostics = function() {
+        console.log('=== VINGO Diagnostics ===');
+        let allPassed = true;
+
+        const test1 = songsMaster.length >= 9;
+        console.log(`[${test1 ? 'PASS' : 'FAIL'}] Song Master has >= 9 songs`);
+        allPassed = allPassed && test1;
+
+        const savedState = JSON.parse(JSON.stringify(state));
+        state.locked = false;
+        state.grid = [];
+        state.celebrationShown = false;
+        randomize();
+        const test2 = new Set(state.grid.map(s => s.id)).size === 9;
+        console.log(`[${test2 ? 'PASS' : 'FAIL'}] Grid has 9 unique songs`);
+        allPassed = allPassed && test2;
+
+        state.locked = true;
+        const gridBefore = [...state.grid];
+        randomize();
+        const test3 = JSON.stringify(gridBefore) === JSON.stringify(state.grid);
+        console.log(`[${test3 ? 'PASS' : 'FAIL'}] Randomize blocked when locked`);
+        allPassed = allPassed && test3;
+
+        state.marks = [true, true, true, false, false, false, false, false, false];
+        state.bingoAchievedAt = null;
+        checkBingo();
+        const test4 = state.bingo && state.bingoLines.includes(0);
+        const testTime = state.bingoAchievedAt !== null;
+        console.log(`[${test4 ? 'PASS' : 'FAIL'}] Bingo Row 1 detected`);
+        console.log(`[${testTime ? 'PASS' : 'FAIL'}] Timestamp recorded`);
+        allPassed = allPassed && test4 && testTime;
+
+        const canvas = document.getElementById('confetti-canvas');
+        const testCanvas = canvas && canvas.width > 0;
+        console.log(`[${testCanvas ? 'PASS' : 'FAIL'}] Confetti canvas initialized`);
+        allPassed = allPassed && testCanvas;
+        
+        // UI/UX ENHANCE: Test step indicator exists
+        const stepIndicator = document.getElementById('step-indicator');
+        const testSteps = stepIndicator && stepIndicator.querySelectorAll('.step').length === 4;
+        console.log(`[${testSteps ? 'PASS' : 'FAIL'}] Step indicator has 4 steps`);
+        allPassed = allPassed && testSteps;
+
+        Object.assign(state, savedState);
+        if (state.bingoAchievedAt && typeof state.bingoAchievedAt === 'string') {
+            state.bingoAchievedAt = new Date(state.bingoAchievedAt);
+        }
+        render();
+        updateHint();
+        updateStepIndicator();
+
+        console.log('=========================');
+        console.log(allPassed ? '✅ ALL TESTS PASSED' : '❌ SOME TESTS FAILED');
+        return allPassed;
+    };
+
+    init();
+
+    </script>
+</body>
+
+</html>
