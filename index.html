@@ -5,19 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VOCALOID BINGO</title>
-
- <!-- OGP / X (Twitter) 用設定 -->
-<meta property="og:title" content="VINGO – Vocaloid Bingo">
-<meta property="og:description" content="ボカロ楽曲で遊ぶ3×3ビンゴ。VINGOしたらスクショしてDMで送ってね！">
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://pkurage-sudo.github.io/VINGO/">
-<meta property="og:image" content="https://pkurage-sudo.github.io/VINGO/ogp.png">
-
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="VINGO – Vocaloid Bingo">
-<meta name="twitter:description" content="ボカロ楽曲で遊ぶ3×3ビンゴ。VINGOしたらスクショしてDMで送ってね！">
-<meta name="twitter:image" content="https://pkurage-sudo.github.io/VINGO/ogp.png">
-
     <style>
         /* --- RESET & BASE --- */
         * {
@@ -630,7 +617,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 1000;
+            z-index: 9000;
+            /* BACKDROP: lowest layer */
             opacity: 0;
             visibility: hidden;
             transition: opacity 0.3s ease, visibility 0.3s ease;
@@ -654,7 +642,8 @@
                 0 0 30px rgba(255, 255, 255, 0.8);
             animation: celebrationBounce 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             position: relative;
-            z-index: 1001;
+            z-index: 10000;
+            /* VINGO TEXT: highest layer */
         }
 
         @keyframes celebrationBounce {
@@ -681,7 +670,8 @@
             width: 100%;
             height: 100%;
             pointer-events: none;
-            z-index: 1002;
+            z-index: 9500;
+            /* EFFECTS: above overlay, below VINGO text */
             display: none;
         }
 
@@ -740,12 +730,469 @@
                 padding: 6px;
             }
         }
+
+
+        /* =========================
+   THEME SYSTEM (5 themes)
+   ========================= */
+
+        /* tokens */
+        :root {
+            --bg: #f8f9fa;
+            --text: #111;
+            --muted: rgba(0, 0, 0, .55);
+
+            --panel: #fff;
+            --panel2: #f5f5f5;
+            --border: rgba(0, 0, 0, .15);
+            --shadow: 0 8px 24px rgba(0, 0, 0, .08);
+
+            --accent: #111;
+            --accent2: #555;
+
+            --btnbg: #fff;
+            --btntext: #111;
+            --btnborder: rgba(0, 0, 0, .22);
+
+            --cellbg: #fff;
+            --cellborder: rgba(0, 0, 0, .18);
+            --cellhover: rgba(0, 0, 0, .04);
+
+            --mark: rgba(0, 0, 0, .85);
+            --markglow: none;
+
+            --vingobg: rgba(255, 255, 255, .92);
+            --vingotext: #111;
+            --vingoshadow: 0 20px 60px rgba(0, 0, 0, .15);
+        }
+
+        /* Theme: Simple (Light / Default) */
+        body.theme-simple {
+            --bg: #f8f9fa;
+            --text: #111;
+            --muted: rgba(0, 0, 0, .55);
+            --panel: #fff;
+            --panel2: #f5f5f5;
+            --border: rgba(0, 0, 0, .15);
+            --shadow: 0 8px 24px rgba(0, 0, 0, .08);
+            --accent: #111;
+            --accent2: #666;
+            --btnbg: #fff;
+            --btntext: #111;
+            --btnborder: rgba(0, 0, 0, .22);
+            --cellbg: #fff;
+            --cellborder: rgba(0, 0, 0, .18);
+            --cellhover: rgba(0, 0, 0, .04);
+            --mark: rgba(0, 0, 0, .85);
+            --markglow: none;
+            --vingobg: rgba(255, 255, 255, .95);
+            --vingotext: #111;
+        }
+
+        /* Theme: Miku (Light / Mint & Cyan) */
+        body.theme-miku {
+            --bg: #f0fcfb;
+            /* Very light mint */
+            --text: #052026;
+            /* Dark teal-black for strong contrast */
+            --muted: #4a6d73;
+            --panel: #ffffff;
+            --panel2: #e0f7f5;
+            --border: #39C5BB;
+            --shadow: 0 8px 24px rgba(57, 197, 187, 0.15);
+            --accent: #39C5BB;
+            --accent2: #8ae0da;
+            --btnbg: #ffffff;
+            --btntext: #052026;
+            --btnborder: #39C5BB;
+            --cellbg: #fafffe;
+            --cellborder: #8ae0da;
+            --cellhover: #e0f7f5;
+            --mark: #39C5BB;
+            --markglow: 0 0 8px rgba(57, 197, 187, 0.4);
+            --vingobg: rgba(255, 255, 255, 0.95);
+            --vingotext: #39C5BB;
+            --vingoshadow: 0 20px 70px rgba(57, 197, 187, 0.25);
+        }
+
+        /* Theme: Rin (Light / Cream & Yellow) */
+        body.theme-rin {
+            --bg: #fffef5;
+            /* Cream white */
+            --text: #2b2606;
+            /* Dark yellowish black */
+            --muted: #8a825e;
+            --panel: #ffffff;
+            --panel2: #fffde0;
+            --border: #FFD900;
+            --shadow: 0 8px 24px rgba(255, 217, 0, 0.15);
+            --accent: #FFD900;
+            --accent2: #ffe96b;
+            --btnbg: #ffffff;
+            --btntext: #2b2606;
+            --btnborder: #FFD900;
+            --cellbg: #fffdf5;
+            --cellborder: #ffe96b;
+            --cellhover: #fffde0;
+            --mark: #FFD900;
+            --markglow: 0 0 8px rgba(255, 217, 0, 0.4);
+            --vingobg: rgba(255, 255, 255, 0.95);
+            --vingotext: #fab500;
+            /* Darker yellow for text visibility */
+            --vingoshadow: 0 20px 70px rgba(255, 217, 0, 0.25);
+        }
+
+        /* Theme: Luka (Dark / Black & Pink) */
+        body.theme-luka {
+            --bg: #1a1014;
+            /* Deep dark pink-black */
+            --text: #FDE4EF;
+            /* Light pink-white */
+            --muted: #c98e9f;
+            --panel: #26171d;
+            --panel2: #331f27;
+            --border: #F4A3C2;
+            --shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            --accent: #F4A3C2;
+            --accent2: #ffc9df;
+            --btnbg: #2d1c23;
+            --btntext: #FDE4EF;
+            --btnborder: #F4A3C2;
+            --cellbg: #2d1c23;
+            --cellborder: #804f62;
+            --cellhover: #3d262f;
+            --mark: #F4A3C2;
+            --markglow: 0 0 12px rgba(244, 163, 194, 0.5);
+            --vingobg: rgba(38, 23, 29, 0.95);
+            --vingotext: #F4A3C2;
+            --vingoshadow: 0 20px 60px rgba(244, 163, 194, 0.2);
+        }
+
+        /* Theme: Meiko (Dark / Black & Red) */
+        body.theme-meiko {
+            --bg: #1a0b0b;
+            /* Deep dark red-black */
+            --text: #ffebe6;
+            /* Light white-red */
+            --muted: #bdaaa8;
+            --panel: #291212;
+            --panel2: #3d1c1c;
+            --border: #D81F26;
+            --shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+            --accent: #D81F26;
+            --accent2: #ff5c62;
+            --btnbg: #301616;
+            --btntext: #ffebe6;
+            --btnborder: #D81F26;
+            --cellbg: #301616;
+            --cellborder: #8c262a;
+            --cellhover: #4a2121;
+            --mark: #D81F26;
+            --markglow: 0 0 12px rgba(216, 31, 38, 0.6);
+            --vingobg: rgba(41, 18, 18, 0.95);
+            --vingotext: #D81F26;
+            --vingoshadow: 0 20px 70px rgba(216, 31, 38, 0.3);
+        }
+
+        /* Apply */
+        body {
+            background: var(--bg);
+            color: var(--text);
+            /* Smooth background transition for all themes */
+            transition: background-color 0.5s ease, color 0.3s ease;
+        }
+
+        /* Ensure background color style from JS doesn't override theme backgrounds */
+        body:not(.theme-simple) {
+            background-color: transparent !important;
+            background: var(--bg);
+        }
+
+        /* Top theme switch UI (Glassmorphism & Scrollable) */
+        .theme-switch {
+            width: 100%;
+            max-width: 520px;
+            margin: 0 auto 12px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            /* Capsule shape */
+            background: rgba(255, 255, 255, 0.15);
+            /* Glass base */
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+
+            /* Ensure readability of label inside switch */
+            color: var(--text);
+        }
+
+        /* Dark themes switcher adjustments */
+        body.theme-luka .theme-switch,
+        body.theme-meiko .theme-switch {
+            background: rgba(0, 0, 0, 0.3);
+            border-color: var(--accent);
+        }
+
+        .theme-switch .row {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 12px;
+            overflow: hidden;
+            /* Container protects overflow */
+        }
+
+        .theme-switch .label {
+            font-weight: 700;
+            letter-spacing: .02em;
+            color: var(--muted);
+            white-space: nowrap;
+            font-size: 11px;
+            flex-shrink: 0;
+            /* Prevents label from shrinking */
+        }
+
+        .theme-switch .tabs {
+            display: flex;
+            gap: 6px;
+            flex-wrap: nowrap;
+            /* CRITICAL: No wrapping */
+            overflow-x: auto;
+            /* Allow horizontal scroll */
+            padding-bottom: 2px;
+            /* Space for scrollbar if any */
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            /* Hide scrollbar Firefox */
+        }
+
+        .theme-switch .tabs::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Hide scrollbar Chrome/Safari */
+
+        .theme-switch button {
+            appearance: none;
+            -webkit-appearance: none;
+            border: 1px solid var(--border);
+            /* Softer default border */
+            background: transparent;
+            color: var(--muted);
+            padding: 0 14px;
+            /* Horizontal padding adjusted for 5 buttons */
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 11px;
+            line-height: 42px;
+            /* Vertical center */
+            height: 44px;
+            /* Explicit height for touch target */
+            min-height: 44px;
+            white-space: nowrap;
+            /* CRITICAL: No text wrap */
+            flex-shrink: 0;
+            /* CRITICAL: No shrinking */
+            transition: all 0.2s ease;
+            box-shadow: none;
+        }
+
+        .theme-switch button:active {
+            transform: scale(.96);
+        }
+
+        /* Active State (Selected) */
+        .theme-switch button[aria-pressed="true"] {
+            border-color: var(--accent);
+            background: var(--accent);
+            color: var(--bg);
+            /* Contrast text basic assumption */
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Light themes (Miku/Rin) - Active button text must be dark */
+        body.theme-miku .theme-switch button[aria-pressed="true"],
+        body.theme-rin .theme-switch button[aria-pressed="true"] {
+            color: #052026;
+            /* Dark text for contrast against bright accent */
+        }
+
+        /* Dark themes (Luka/Meiko) - Active button text must be light or dark depending on accent brightness */
+        body.theme-luka .theme-switch button[aria-pressed="true"],
+        body.theme-meiko .theme-switch button[aria-pressed="true"] {
+            color: #fff;
+            /* White text on dark/rich accents */
+        }
+
+        /* Safe Broad Styling */
+        .card,
+        .panel,
+        .section,
+        .box,
+        .controls,
+        .board,
+        .grid-wrap,
+        #app,
+        .grid-card,
+        .controls-card,
+        .sns-section,
+        .instructions {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            border-radius: 14px;
+        }
+
+        /* Reset #app specific */
+        #app {
+            box-shadow: var(--shadow);
+            max-width: 480px;
+        }
+
+        /* General Buttons */
+        button:not(.theme-switch button) {
+            background: var(--btnbg);
+            color: var(--btntext);
+            border: 1px solid var(--btnborder);
+            border-radius: 12px;
+        }
+
+        /* Grid Cells - READABILITY GUARANTEE */
+        .cell {
+            background: var(--cellbg);
+            border: 1px solid var(--cellborder);
+            color: var(--text);
+            /* Ensure contrast */
+            border-radius: 10px;
+
+            /* Text shadow for guaranteed legibility */
+            text-shadow: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* Dark theme specific text brightness boost */
+        body.theme-luka .cell,
+        body.theme-meiko .cell {
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+            /* subtle shadow to pop text from dark bg */
+        }
+
+        .cell:hover:not(.empty) {
+            background: color-mix(in srgb, var(--cellbg) 90%, var(--cellhover) 10%);
+        }
+
+        .cell.marked::after {
+            border-color: var(--mark);
+            box-shadow: var(--markglow);
+        }
+
+        /* VINGO Banner - VISIBILITY GUARANTEE */
+        .vingo-banner {
+            background: var(--vingobg);
+            color: var(--vingotext);
+            box-shadow: var(--vingoshadow);
+            border: 2px solid var(--accent);
+            /* Thicker border */
+            position: relative;
+            z-index: 2000;
+            /* High Z */
+        }
+
+        /* Ensure VINGO text is always visible */
+        .vingo-banner-text {
+            color: var(--vingotext);
+        }
+
+        /* Celebration Overlay - VISIBILITY GUARANTEE */
+        #celebration-overlay {
+            z-index: 9999;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(4px);
+        }
+
+        /* The giant VINGO! text */
+        .celebration-text {
+            color: var(--vingotext);
+            /* Massive shadow/stroke for visibility on ANY background */
+            text-shadow:
+                3px 3px 0 var(--panel),
+                -1px -1px 0 var(--panel),
+                1px -1px 0 var(--panel),
+                -1px 1px 0 var(--panel),
+                0 0 40px var(--accent);
+            z-index: 10000;
+        }
+
+        header {
+            border-bottom-color: var(--accent);
+        }
+
+        h1 {
+            color: var(--text);
+        }
+
+        .controls button {
+            box-shadow: 0 2px 0 var(--border);
+        }
+
+        .status-bar {
+            background: var(--panel2);
+            border-color: var(--border);
+            color: var(--text);
+        }
+
+        .step-indicator {
+            background: var(--panel2);
+        }
+
+        .step.active .step-num {
+            background: var(--accent);
+            color: var(--bg);
+        }
+
+        /* Step number text color fix for contrast */
+        body.theme-miku .step.active .step-num,
+        body.theme-rin .step.active .step-num {
+            color: #000;
+        }
+
+        body.theme-luka .step.active .step-num,
+        body.theme-meiko .step.active .step-num {
+            color: #fff;
+        }
+
+        .step {
+            color: var(--muted);
+        }
+
+        .step.active {
+            color: var(--text);
+            font-weight: 700;
+        }
     </style>
 </head>
 
 <body>
 
     <div id="app">
+        <!-- THEME SWITCH UI -->
+        <div class="theme-switch" id="themeSwitch" aria-label="デザイン切替">
+            <div class="row">
+                <div class="label">🎨 デザイン</div>
+                <div class="tabs" role="tablist" aria-label="デザインテーマ">
+                    <button type="button" data-theme="theme-simple" aria-pressed="true">シンプル</button>
+                    <button type="button" data-theme="theme-miku" aria-pressed="false">ミク</button>
+                    <button type="button" data-theme="theme-rin" aria-pressed="false">リン</button>
+                    <button type="button" data-theme="theme-luka" aria-pressed="false">ルカ</button>
+                    <button type="button" data-theme="theme-meiko" aria-pressed="false">メイコ</button>
+                </div>
+            </div>
+        </div>
+
         <header>
             <h1>Vocaloid<br>↓ Bingo. ↓</h1>
             <div class="subtitle">3×3 ビンゴカード</div>
@@ -852,652 +1299,953 @@
     <canvas id="confetti-canvas"></canvas>
 
     <script>
-    /* ========================================
-       DATA: 50 SONGS (DO NOT MODIFY)
-       ======================================== */
-    const songsMaster = [
-        { id: 1, title: '千本桜' },
-        { id: 2, title: 'メルト' },
-        { id: 3, title: 'ワールドイズマイン' },
-        { id: 4, title: 'みくみくにしてあげる♪' }, 
-        { id: 5, title: '初音ミクの消失' },
-        { id: 6, title: 'ロミオとシンデレラ' },
-        { id: 7, title: 'マトリョシカ' },
-        { id: 8, title: '裏表ラバーズ' },
-        { id: 9, title: 'ローリンガール' },
-        { id: 10, title: 'ダブルラリアット' },
-        { id: 11, title: 'ハッピーシンセサイザ' },
-        { id: 12, title: 'ルカルカ★ナイトフィーバー' },
-        { id: 13, title: 'Just Be Friends' },
-        { id: 14, title: 'magnet' },
-        { id: 15, title: 'トリノコシティ' },
-        { id: 16, title: 'パンダヒーロー' },
-        { id: 17, title: 'モザイクロール' },
-        { id: 18, title: '千年の独奏歌' },
-        { id: 19, title: 'カゲロウデイズ' },
-        { id: 20, title: 'チルドレンレコード' },
-        { id: 21, title: '六兆年と一夜物語' },
-        { id: 22, title: '脳漿炸裂ガール' },
-        { id: 23, title: 'からくりピエロ' },
-        { id: 24, title: '天ノ弱' },
-        { id: 25, title: 'サンドリヨン' },
-        { id: 26, title: '恋愛裁判' },
-        { id: 27, title: '妄想税' },
-        { id: 28, title: 'ヒバナ' },
-        { id: 29, title: 'シャルル' },
-        { id: 30, title: '妄想感傷代償連盟' },
-        { id: 31, title: 'アンノウン・マザーグース' },
-        { id: 32, title: '砂の惑星' },
-        { id: 33, title: 'いーあるふぁんくらぶ' },
-        { id: 34, title: '神のまにまに' },
-        { id: 35, title: '夜咄ディセイブ' },
-        { id: 36, title: 'ゴーストルール' },
-        { id: 37, title: 'ECHO' },
-        { id: 38, title: 'Heart Beats' },
-        { id: 39, title: 'Tell Your World' },
-        { id: 40, title: 'ODDS&ENDS' },
-        { id: 41, title: 'Calc.' },
-        { id: 42, title: 'リリリリ★バーニングナイト' },
-        { id: 43, title: 'トエト' },
-        { id: 44, title: 'Alice' },
-        { id: 45, title: '恋は戦争' },
-        { id: 46, title: 'ハロ／ハワユ' },
-        { id: 47, title: '弱虫モンブラン' },
-        { id: 48, title: '心拍数#0822' },
-        { id: 49, title: '1925' },
-        { id: 50, title: 'ボカロメドレー(仮)' }
-    ];
-
-    /* ========================================
-       STATE MANAGEMENT
-       ======================================== */
-    const state = {
-        grid: [],
-        locked: false,
-        marks: new Array(9).fill(false),
-        bingo: false,
-        bingoLines: [],
-        bingoAchievedAt: null,
-        celebrationShown: false,
-        confettiRunning: false
-    };
-
-    /* ========================================
-       CONSTANTS
-       ======================================== */
-    const CELEBRATION_DURATION = 1400;
-
-    /* ========================================
-       DOM ELEMENTS
-       ======================================== */
-    const els = {
-        app: document.getElementById('app'),
-        grid: document.getElementById('grid'),
-        gridCard: document.getElementById('grid-card'),
-        btnRandom: document.getElementById('btn-random'),
-        btnLock: document.getElementById('btn-lock'),
-        btnReset: document.getElementById('btn-reset'),
-        btnReplay: document.getElementById('btn-replay'),
-        statusText: document.getElementById('status-text'),
-        hintText: document.getElementById('hint-text'),
-        vingoBanner: document.getElementById('vingo-banner'),
-        vingoTimestamp: document.getElementById('vingo-timestamp'),
-        snsSection: document.getElementById('sns-section'),
-        screenshotHint: document.getElementById('screenshot-hint'),
-        celebrationOverlay: document.getElementById('celebration-overlay'),
-        celebrationText: document.getElementById('celebration-text'),
-        confettiCanvas: document.getElementById('confetti-canvas'),
-        stepIndicator: document.getElementById('step-indicator')
-    };
-
-    /* ========================================
-       BINGO LINE DEFINITIONS
-       ======================================== */
-    const BINGO_LINES = [
-        [0, 1, 2], [3, 4, 5], [6, 7, 8],
-        [0, 3, 6], [1, 4, 7], [2, 5, 8],
-        [0, 4, 8], [2, 4, 6]
-    ];
-
-    /* ========================================
-       CORE LOGIC
-       ======================================== */
-    
-    function init() {
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
-        render();
-        updateHint();
-        updateStepIndicator();
-    }
-
-    function resizeCanvas() {
-        els.confettiCanvas.width = window.innerWidth;
-        els.confettiCanvas.height = window.innerHeight;
-    }
-
-    function randomize() {
-        if (state.locked) return;
-        
-        if (songsMaster.length < 9) {
-            alert('曲数が足りません（9曲以上必要）');
-            return;
-        }
-        
-        const shuffled = [...songsMaster];
-        for (let i = shuffled.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-        }
-        
-        state.grid = shuffled.slice(0, 9);
-        state.marks.fill(false);
-        state.bingo = false;
-        state.bingoLines = [];
-        state.bingoAchievedAt = null;
-        state.celebrationShown = false;
-        
-        // UI/UX ENHANCE: Subtle visual variation on randomize
-        applySubtleVariation();
-        
-        render();
-        updateHint();
-        updateStepIndicator();
-    }
-
-    // UI/UX ENHANCE: Apply subtle visual variation
-    function applySubtleVariation() {
-        const variations = [
-            { bg: '#e8e8e8', shadow: '0 3px 12px rgba(0,0,0,0.06)' },
-            { bg: '#eaeaea', shadow: '0 4px 14px rgba(0,0,0,0.07)' },
-            { bg: '#e6e6e6', shadow: '0 3px 10px rgba(0,0,0,0.05)' }
+        /* ========================================
+           DATA: SETLIST SONGS
+           ======================================== */
+        const songsMaster = [
+            { id: 1, title: 'needLe' },
+            { id: 2, title: 'ステラ' },
+            { id: 3, title: 'フロムトーキョー' },
+            { id: 4, title: '流星のパルス' },
+            { id: 5, title: 'Flyway' },
+            { id: 6, title: '相生' },
+            { id: 7, title: 'すれすれ' },
+            { id: 8, title: 'それでも僕らは歌うことをやめない' },
+            { id: 9, title: 'オーダーメイド' },
+            { id: 10, title: 'てらてら' },
+            { id: 11, title: 'STAGE OF SEKAI' },
+            { id: 12, title: 'Peaky Peaky' },
+            { id: 13, title: 'セカイ' },
+            { id: 14, title: '群青讃歌' },
+            { id: 15, title: 'インテグラル' },
+            { id: 16, title: 'レグルス' },
+            { id: 17, title: '霽れを待つ' },
+            { id: 18, title: '「1」' },
+            { id: 19, title: 'MOTTO!!!' },
+            { id: 20, title: 'JUMPIN\' OVER!' },
+            { id: 21, title: 'イフ' },
+            { id: 22, title: 'パラソルサイダー' },
+            { id: 23, title: 'アイノマテリアル' },
+            { id: 24, title: 'アイスドロップ' },
+            { id: 25, title: 'ワールドワイドワンダー' },
+            { id: 26, title: 'メタモリボン' },
+            { id: 27, title: 'Supernova' },
+            { id: 28, title: 'キラー' },
+            { id: 29, title: 'DREAM PLACE' },
+            { id: 30, title: 'フロート・プランナー' },
+            { id: 31, title: '私は、私達は' },
+            { id: 32, title: 'ももいろの鍵' },
+            { id: 33, title: 'Color of Drops' },
+            { id: 34, title: '天使のクローバー' },
+            { id: 35, title: 'アイドル新鋭隊' },
+            { id: 36, title: 'モア!ジャンプ!モア!' },
+            { id: 37, title: 'Beat Eater' },
+            { id: 38, title: 'Awake Now' },
+            { id: 39, title: '虚ろを扇ぐ' },
+            { id: 40, title: '仮死化' },
+            { id: 41, title: 'リアライズ' },
+            { id: 42, title: 'CR詠ZY' },
+            { id: 43, title: '烈火' },
+            { id: 44, title: 'ULTRAC' },
+            { id: 45, title: 'ひつじがいっぴき' },
+            { id: 46, title: '下剋上' },
+            { id: 47, title: 'Ready Steady' },
+            { id: 48, title: 'Forward' },
+            { id: 49, title: 'Beyond the way' },
+            { id: 50, title: 'blender' },
+            { id: 51, title: 'RAD DOGS' },
+            { id: 52, title: 'シネマ' },
+            { id: 53, title: 'トンデモワンダーズ' },
+            { id: 54, title: 'Glory Steady Go!' },
+            { id: 55, title: '88☆彡' },
+            { id: 56, title: '星空のメロディー' },
+            { id: 57, title: '世界を照らすテトラッド' },
+            { id: 58, title: 'サイバーパンクデッドボーイ' },
+            { id: 59, title: 'オペラ!スペースオペラ!' },
+            { id: 60, title: '成敗いたAAAAAす!' },
+            { id: 61, title: 'ショウタイム・ルーラー' },
+            { id: 62, title: 'にっこり^^調査隊のテーマ' },
+            { id: 63, title: 'セカイはまだ始まってすらいない' },
+            { id: 64, title: 'potatoになっていく' },
+            { id: 65, title: 'Mr. Showtime' },
+            { id: 66, title: '箱庭のコラル' },
+            { id: 67, title: 'ニジイロストーリーズ' },
+            { id: 68, title: 'ワンスアポンアドリーム' },
+            { id: 69, title: 'キラピピ★キラピカ' },
+            { id: 70, title: 'フィラメントフィーバー' },
+            { id: 71, title: 'ウミユリ海底譚' },
+            { id: 72, title: '夜明けと蛍' },
+            { id: 73, title: 'Tell Your World' },
+            { id: 74, title: 'Hand in Hand' },
+            { id: 75, title: 'Yellow' },
+            { id: 76, title: '悪ノ娘' },
+            { id: 77, title: '悪ノ召使' },
+            { id: 78, title: 'ルービックキューブ' },
+            { id: 79, title: 'カーニバル' },
+            { id: 80, title: 'シリョクケンサ' },
+            { id: 81, title: 'トリノコシティ' },
+            { id: 82, title: 'からくりピエロ' },
+            { id: 83, title: '妄想スケッチ' },
+            { id: 84, title: 'キリトリセン' },
+            { id: 85, title: '恋愛裁判' },
+            { id: 86, title: '二息歩行' },
+            { id: 87, title: 'モザイクロール' },
+            { id: 88, title: '弱虫モンブラン' },
+            { id: 89, title: '愛言葉' },
+            { id: 90, title: 'メランコリック' },
+            { id: 91, title: 'スイートマジック' },
+            { id: 92, title: 'ライフライン' },
+            { id: 93, title: 'トゥインクル' },
+            { id: 94, title: '人生リセットボタン' },
+            { id: 95, title: 'カミサマネジマキ' },
+            { id: 96, title: '六兆年と一夜物語' },
+            { id: 97, title: 'インビジブル' },
+            { id: 98, title: '敗北の少年' },
+            { id: 99, title: 'イカサマライフゲイム' },
+            { id: 100, title: '地球最後の告白を' },
+            { id: 101, title: 'FREELY TOMORROW' },
+            { id: 102, title: '愛Dee' },
+            { id: 103, title: 'ビバハピ' },
+            { id: 104, title: 'イージーデンス' },
+            { id: 105, title: '東京テディベア' },
+            { id: 106, title: 'アブストラクト・ナンセンス' },
+            { id: 107, title: 'ハウトゥー世界征服' },
+            { id: 108, title: 'ロストワンの号哭' },
+            { id: 109, title: '恋スルVOC@LOID' },
+            { id: 110, title: 'ミラクルペイント' },
+            { id: 111, title: 'アンハッピーリフレイン' },
+            { id: 112, title: 'ローリンガール' },
+            { id: 113, title: '裏表ラバーズ' },
+            { id: 114, title: 'テトロドトキサイザ2号' },
+            { id: 115, title: 'Masked bitcH' },
+            { id: 116, title: 'ギガンティックO.T.N' },
+            { id: 117, title: 'ぴんこすてぃっくLuv' },
+            { id: 118, title: 'cLick cRack' },
+            { id: 119, title: '被害妄想携帯女子' },
+            { id: 120, title: 'drop pop candy' },
+            { id: 121, title: 'おこちゃま戦争' },
+            { id: 122, title: 'ヒビカセ' },
+            { id: 123, title: '+♂' },
+            { id: 124, title: 'カゲロウデイズ' },
+            { id: 125, title: 'ヘッドフォンアクター' },
+            { id: 126, title: '空想フォレスト' },
+            { id: 127, title: '如月アテンション' },
+            { id: 128, title: 'コノハの世界事情' },
+            { id: 129, title: 'チルドレンレコード' },
+            { id: 130, title: '夜咄ディセイブ' },
+            { id: 131, title: '夕景イエスタデイ' },
+            { id: 132, title: 'アウターサイエンス' },
+            { id: 133, title: 'ロスタイムメモリー' },
+            { id: 134, title: 'アヤノの幸福理論' },
+            { id: 135, title: '人造エネミー' },
+            { id: 136, title: '透明アンサー' },
+            { id: 137, title: '魔法少女幸福論' },
+            { id: 138, title: '九龍イドラ' },
+            { id: 139, title: 'ヤンキーボーイ・ヤンキーガール' },
+            { id: 140, title: 'バビロン' },
+            { id: 141, title: '骸骨楽団とリリア' },
+            { id: 142, title: 'エンヴィキャットウォーク' },
+            { id: 143, title: 'パンダヒーロー' },
+            { id: 144, title: '結んで開いて羅刹と骸' },
+            { id: 145, title: 'マトリョシカ' },
+            { id: 146, title: 'Mrs. Pumpkinの滑稽な夢' },
+            { id: 147, title: 'clock lock works' },
+            { id: 148, title: 'ワンダーランドと羊の歌' },
+            { id: 149, title: 'リンネ' },
+            { id: 150, title: 'ドーナツホール' },
+            { id: 151, title: 'ルカルカ★ナイトフィーバー' },
+            { id: 152, title: 'ありふれたせかいせいふく' },
+            { id: 153, title: '腐れ外道とチョコレゐト' },
+            { id: 154, title: 'すろぉもぉしょん' },
+            { id: 155, title: 'マッシュルームマザー' },
+            { id: 156, title: 'ストロボラスト' },
+            { id: 157, title: 'Sweet Devil' },
+            { id: 158, title: 'KiLLER LADY' },
+            { id: 159, title: '十面相' },
+            { id: 160, title: 'Mr Music' },
+            { id: 161, title: '神のまにまに' },
+            { id: 162, title: '脳漿炸裂ガール' },
+            { id: 163, title: 'スイートフロートアパート' },
+            { id: 164, title: 'クワガタにチョップしたらタイムスリップした' },
+            { id: 165, title: 'おニューのかさぶた、ペットに食われろ' },
+            { id: 166, title: '初音ミクの消失' },
+            { id: 167, title: 'カムパネルラ' },
+            { id: 168, title: 'ハロー、プラネット。' },
+            { id: 169, title: 'ぼくらの16bit戦争' },
+            { id: 170, title: '愛して 愛して 愛して' },
+            { id: 171, title: 'てんしょう しょうてんしょう' },
+            { id: 172, title: 'リンちゃんなう!' },
+            { id: 173, title: 'パラジクロロベンゼン' },
+            { id: 174, title: 'ネトゲ廃人シュプレヒコール' },
+            { id: 175, title: 'Party Junkie' },
+            { id: 176, title: 'NEXT NEST' },
+            { id: 177, title: 'ブラック★ロックシューター' },
+            { id: 178, title: 'ワールドイズマイン' },
+            { id: 179, title: 'メルト' },
+            { id: 180, title: 'ハッピーシンセサイザ' },
+            { id: 181, title: 'Bad ∞ End ∞ Night' },
+            { id: 182, title: 'Crazy ∞ nighT' },
+            { id: 183, title: 'デザイン' },
+            { id: 184, title: 'アイニーク' },
+            { id: 185, title: 'ドゥーマー' },
+            { id: 186, title: 'カートゥーンガール' },
+            { id: 187, title: '1ピース' },
+            { id: 188, title: 'PPPP' },
+            { id: 189, title: 'サイエンス' },
+            { id: 190, title: '８番出口' },
+            { id: 191, title: 'SAN値直葬' },
+            { id: 192, title: 'テトリス' },
+            { id: 193, title: 'サ終あざした' },
+            { id: 194, title: 'ねこのおて' },
+            { id: 195, title: 'ひゅ〜どろどろ' },
+            { id: 196, title: '俺ん家の水道蛇口から山岡家出る' },
+            { id: 197, title: 'てにをは' },
+            { id: 198, title: 'マリオネットダンサー' },
+            { id: 199, title: 'Akage' },
+            { id: 200, title: 'あちこちデートさん' },
+            { id: 201, title: 'What\'s up? Pop!' },
+            { id: 202, title: '孤独サイコ' },
+            { id: 203, title: 'パラレルラルラ' },
+            { id: 204, title: 'ダイダイダイダイダイキライ' },
+            { id: 205, title: '過置換' },
+            { id: 206, title: '匙ノ哭' },
+            { id: 207, title: '外のヒト' },
+            { id: 208, title: '花溺れ' },
+            { id: 209, title: 'LEMON MELON COOKIE' },
+            { id: 210, title: 'ラブマシーン3。' },
+            { id: 211, title: 'フォニイ' },
+            { id: 212, title: 'マーシャル・マキシマイザー' },
+            { id: 213, title: 'シャンティ' },
+            { id: 214, title: 'ヒアソビ' },
+            { id: 215, title: 'エレファント・インザ・ミュージアム。' },
+            { id: 216, title: 'Rabb!t!?.' },
+            { id: 217, title: 'Jeep!?.' },
+            { id: 218, title: '天使の翼。' },
+            { id: 219, title: 'ド屑' },
+            { id: 220, title: 'キャットラビング' },
+            { id: 221, title: 'ラグトレイン' },
+            { id: 222, title: 'テレキャスタービーボーイ' },
+            { id: 223, title: '電気予報' },
+            { id: 224, title: 'ラボ・ラトリ' },
+            { id: 225, title: '侵蝕' },
+            { id: 226, title: 'HERO' },
+            { id: 227, title: 'デーモンロード' },
+            { id: 228, title: '撥条少女時計' },
+            { id: 229, title: 'プシ' },
+            { id: 230, title: '一龠' },
+            { id: 231, title: 'メズマライザー' },
+            { id: 232, title: '㋰責任集合体' },
+            { id: 233, title: 'ユレ弧' },
+            { id: 234, title: 'イガク' },
+            { id: 235, title: 'エスパーエスパー' },
+            { id: 236, title: 'くうになる' },
+            { id: 237, title: '黒塗り世界宛て書簡' },
+            { id: 238, title: '混沌ブギ' },
+            { id: 239, title: 'オーバーライド' },
+            { id: 240, title: 'ちっちゃな私' },
+            { id: 241, title: '人マニア' },
+            { id: 242, title: 'ライアーダンサー' },
+            { id: 243, title: '幽霊東京' },
+            { id: 244, title: 'KING' },
+            { id: 245, title: 'EYE' },
+            { id: 246, title: 'アイデンティティ' },
+            { id: 247, title: '酔いどれ知らず' },
+            { id: 248, title: 'QUEEN' },
+            { id: 249, title: 'きゅうくらりん' },
+            { id: 250, title: 'ずんだパーリナイ' },
+            { id: 251, title: 'トラフィック・ジャム' },
+            { id: 252, title: 'ディジーディジー' },
+            { id: 253, title: 'ダーリンダンス' },
+            { id: 254, title: 'グッバイ宣言' },
+            { id: 255, title: 'オートファジー' },
+            { id: 256, title: 'ニュートンダンス' },
+            { id: 257, title: 'フランケンX' },
+            { id: 258, title: 'ポッピンキャンディ☆フィーバー!' },
+            { id: 259, title: '腰痛持ち、4つ打ち' },
+            { id: 260, title: 'ネタソネピーポー' },
+            { id: 261, title: '回想' },
+            { id: 262, title: 'ラブ' },
+            { id: 263, title: '新人類' },
+            { id: 264, title: 'M@GICAL CURE! LOVE SHOT!' },
+            { id: 265, title: 'さよならプリンセス' },
+            { id: 266, title: '俺ゴーストタイプ' },
+            { id: 267, title: 'ゴー・トゥ・大都会' },
+            { id: 268, title: 'トリックハート' },
+            { id: 269, title: 'Whisper Whisper Whisper' },
+            { id: 270, title: 'チープなプロパティ' },
+            { id: 271, title: 'アンドゥ' },
+            { id: 272, title: 'シリーテラー' },
+            { id: 273, title: 'アタリハズレ' },
+            { id: 274, title: 'どりーむもーど' },
+            { id: 275, title: '超常体験' },
+            { id: 276, title: 'sneer' }
         ];
-        const v = variations[Math.floor(Math.random() * variations.length)];
-        document.body.style.backgroundColor = v.bg;
-        els.gridCard.style.boxShadow = v.shadow;
-    }
 
-    function lock() {
-        if (!state.grid || state.grid.length === 0) {
-            showHint('先に［ランダム］を押してください', true);
-            return;
+        /* ========================================
+           STATE MANAGEMENT
+           ======================================== */
+        const state = {
+            grid: [],
+            locked: false,
+            marks: new Array(9).fill(false),
+            bingo: false,
+            bingoLines: [],
+            bingoAchievedAt: null,
+            celebrationShown: false,
+            confettiRunning: false
+        };
+
+        /* ========================================
+           CONSTANTS
+           ======================================== */
+        const CELEBRATION_DURATION = 1400;
+
+        /* ========================================
+           DOM ELEMENTS
+           ======================================== */
+        const els = {
+            app: document.getElementById('app'),
+            grid: document.getElementById('grid'),
+            gridCard: document.getElementById('grid-card'),
+            btnRandom: document.getElementById('btn-random'),
+            btnLock: document.getElementById('btn-lock'),
+            btnReset: document.getElementById('btn-reset'),
+            btnReplay: document.getElementById('btn-replay'),
+            statusText: document.getElementById('status-text'),
+            hintText: document.getElementById('hint-text'),
+            vingoBanner: document.getElementById('vingo-banner'),
+            vingoTimestamp: document.getElementById('vingo-timestamp'),
+            snsSection: document.getElementById('sns-section'),
+            screenshotHint: document.getElementById('screenshot-hint'),
+            celebrationOverlay: document.getElementById('celebration-overlay'),
+            celebrationText: document.getElementById('celebration-text'),
+            confettiCanvas: document.getElementById('confetti-canvas'),
+            stepIndicator: document.getElementById('step-indicator')
+        };
+
+        /* ========================================
+           BINGO LINE DEFINITIONS
+           ======================================== */
+        const BINGO_LINES = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8],
+            [0, 3, 6], [1, 4, 7], [2, 5, 8],
+            [0, 4, 8], [2, 4, 6]
+        ];
+
+        /* ========================================
+           CORE LOGIC
+           ======================================== */
+
+        function init() {
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+            render();
+            updateHint();
+            updateStepIndicator();
         }
-        if (state.locked) return;
-        
-        state.locked = true;
-        
-        // UI/UX ENHANCE: Enable focus mode
-        els.app.classList.add('focus-grid');
-        els.grid.classList.add('grid-interactive');
-        
-        render();
-        updateHint();
-        updateStepIndicator();
-    }
 
-    function reset() {
-        if (confirm('盤面をリセットしますか？')) {
-            state.grid = [];
-            state.locked = false;
+        function resizeCanvas() {
+            els.confettiCanvas.width = window.innerWidth;
+            els.confettiCanvas.height = window.innerHeight;
+        }
+
+        function randomize() {
+            if (state.locked) return;
+
+            if (songsMaster.length < 9) {
+                alert('曲数が足りません（9曲以上必要）');
+                return;
+            }
+
+            const shuffled = [...songsMaster];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+
+            state.grid = shuffled.slice(0, 9);
             state.marks.fill(false);
             state.bingo = false;
             state.bingoLines = [];
             state.bingoAchievedAt = null;
             state.celebrationShown = false;
-            state.confettiRunning = false;
-            
-            // UI/UX ENHANCE: Remove focus mode
-            els.app.classList.remove('focus-grid');
-            els.grid.classList.remove('grid-interactive');
-            document.body.classList.remove('vingo-phase');
-            
-            stopConfetti();
-            hideCelebration();
+
+            // UI/UX ENHANCE: Subtle visual variation on randomize (ONLY for simple theme)
+            // Constrained to avoid breaking strict light/dark theme rules
+            if (document.body.classList.contains('theme-simple')) {
+                applySubtleVariation();
+            } else {
+                // Reset to specific theme background (remove inline style override)
+                document.body.style.backgroundColor = '';
+                els.gridCard.style.boxShadow = '';
+            }
+
             render();
             updateHint();
             updateStepIndicator();
         }
-    }
 
-    function toggleMark(index) {
-        if (!state.locked) {
-            showHint('※○を付けるには［確定］が必要です', true);
-            return;
+        // UI/UX ENHANCE: Apply subtle visual variation
+        function applySubtleVariation() {
+            const variations = [
+                { bg: '#e8e8e8', shadow: '0 3px 12px rgba(0,0,0,0.06)' },
+                { bg: '#eaeaea', shadow: '0 4px 14px rgba(0,0,0,0.07)' },
+                { bg: '#e6e6e6', shadow: '0 3px 10px rgba(0,0,0,0.05)' }
+            ];
+            const v = variations[Math.floor(Math.random() * variations.length)];
+            document.body.style.backgroundColor = v.bg;
+            els.gridCard.style.boxShadow = v.shadow;
         }
-        
-        const wasBingo = state.bingo;
-        state.marks[index] = !state.marks[index];
-        checkBingo();
-        
-        if (state.bingo && !wasBingo && !state.celebrationShown) {
-            showCelebration();
-        }
-        
-        if (!state.bingo && wasBingo) {
-            state.celebrationShown = false;
-            document.body.classList.remove('vingo-phase');
-        }
-        
-        render();
-        updateStepIndicator();
-    }
 
-    function checkBingo() {
-        const winningLines = [];
-        for (let i = 0; i < BINGO_LINES.length; i++) {
-            const line = BINGO_LINES[i];
-            if (line.every(idx => state.marks[idx])) {
-                winningLines.push(i);
+        function lock() {
+            if (!state.grid || state.grid.length === 0) {
+                showHint('先に［ランダム］を押してください', true);
+                return;
             }
-        }
-        
-        state.bingoLines = winningLines;
-        state.bingo = winningLines.length > 0;
+            if (state.locked) return;
 
-        if (state.bingo && !state.bingoAchievedAt) {
-            state.bingoAchievedAt = new Date();
-        }
-    }
+            state.locked = true;
 
-    function getHighlightedCells() {
-        const cells = new Set();
-        for (const lineIdx of state.bingoLines) {
-            for (const cellIdx of BINGO_LINES[lineIdx]) {
-                cells.add(cellIdx);
-            }
-        }
-        return cells;
-    }
+            // UI/UX ENHANCE: Enable focus mode
+            els.app.classList.add('focus-grid');
+            els.grid.classList.add('grid-interactive');
 
-    function formatDate(date) {
-        if (!date) return '';
-        // Handle string dates (from JSON parse)
-        if (typeof date === 'string') {
-            date = new Date(date);
-        }
-        const y = date.getFullYear();
-        const m = (date.getMonth() + 1).toString().padStart(2, '0');
-        const d = date.getDate().toString().padStart(2, '0');
-        const hour = date.getHours().toString().padStart(2, '0');
-        const min = date.getMinutes().toString().padStart(2, '0');
-        return `${y}/${m}/${d} ${hour}:${min}`;
-    }
-
-    // UI/UX ENHANCE: Update step indicator
-    function updateStepIndicator() {
-        const steps = els.stepIndicator.querySelectorAll('.step');
-        let currentStep = 1;
-        
-        if (state.bingo) {
-            currentStep = 4;
-        } else if (state.locked) {
-            currentStep = 3;
-        } else if (state.grid.length > 0) {
-            currentStep = 2;
-        }
-        
-        steps.forEach((step, idx) => {
-            const stepNum = idx + 1;
-            step.classList.remove('active', 'completed');
-            
-            if (stepNum < currentStep) {
-                step.classList.add('completed');
-            } else if (stepNum === currentStep) {
-                step.classList.add('active');
-            }
-        });
-    }
-
-    /* ========================================
-       COLORFUL SIDE-CRACKER CONFETTI
-       ======================================== */
-    let confettiAnimationFrame = null;
-    let particles = [];
-    
-    const ACCENT_COLORS = [
-        '#00E5FF', '#00B8D4',
-        '#FF2DD6', '#FF4FD8',
-        '#7C4DFF', '#FFD400'
-    ];
-    
-    const GRAY_COLORS = [
-        '#ffffff', '#f5f5f5', '#eeeeee', '#e0e0e0', '#d5d5d5'
-    ];
-
-    function startConfetti() {
-        if (state.confettiRunning) return;
-        state.confettiRunning = true;
-        
-        particles = [];
-        const canvas = els.confettiCanvas;
-        const ctx = canvas.getContext('2d');
-        
-        canvas.classList.add('active');
-        
-        const textRect = els.celebrationText.getBoundingClientRect();
-        const centerY = textRect.top + textRect.height / 2;
-        const leftX = textRect.left;
-        const rightX = textRect.right;
-        
-        const particleCount = 60;
-        const sparkCount = 16;
-        const gravity = 0.15;
-        
-        function getParticleColor() {
-            if (Math.random() < 0.7) {
-                return { color: GRAY_COLORS[Math.floor(Math.random() * GRAY_COLORS.length)], isAccent: false };
-            } else {
-                return { color: ACCENT_COLORS[Math.floor(Math.random() * ACCENT_COLORS.length)], isAccent: true };
-            }
-        }
-        
-        for (let i = 0; i < particleCount / 2; i++) {
-            const { color, isAccent } = getParticleColor();
-            particles.push({
-                type: 'confetti',
-                x: leftX + Math.random() * 20,
-                y: centerY + (Math.random() - 0.5) * 30,
-                vx: Math.random() * 7 + 3,
-                vy: -(Math.random() * 9 + 4),
-                size: Math.random() * 7 + 4,
-                color: color,
-                isAccent: isAccent,
-                rotation: Math.random() * 360,
-                rotationSpeed: (Math.random() - 0.5) * 12,
-                life: 1.0,
-                gravity: gravity
-            });
-        }
-        
-        for (let i = 0; i < particleCount / 2; i++) {
-            const { color, isAccent } = getParticleColor();
-            particles.push({
-                type: 'confetti',
-                x: rightX - Math.random() * 20,
-                y: centerY + (Math.random() - 0.5) * 30,
-                vx: -(Math.random() * 7 + 3),
-                vy: -(Math.random() * 9 + 4),
-                size: Math.random() * 7 + 4,
-                color: color,
-                isAccent: isAccent,
-                rotation: Math.random() * 360,
-                rotationSpeed: (Math.random() - 0.5) * 12,
-                life: 1.0,
-                gravity: gravity
-            });
-        }
-        
-        for (let i = 0; i < sparkCount / 2; i++) {
-            const sparkColor = ACCENT_COLORS[Math.floor(Math.random() * 3)];
-            particles.push({
-                type: 'spark',
-                x: leftX,
-                y: centerY,
-                vx: Math.random() * 10 + 5,
-                vy: -(Math.random() * 12 + 6),
-                length: Math.random() * 15 + 8,
-                color: sparkColor,
-                life: 1.0,
-                gravity: gravity * 0.8
-            });
-        }
-        
-        for (let i = 0; i < sparkCount / 2; i++) {
-            const sparkColor = ACCENT_COLORS[Math.floor(Math.random() * 3)];
-            particles.push({
-                type: 'spark',
-                x: rightX,
-                y: centerY,
-                vx: -(Math.random() * 10 + 5),
-                vy: -(Math.random() * 12 + 6),
-                length: Math.random() * 15 + 8,
-                color: sparkColor,
-                life: 1.0,
-                gravity: gravity * 0.8
-            });
+            render();
+            updateHint();
+            updateStepIndicator();
         }
 
-        let startTime = performance.now();
-        const duration = 1300;
+        function reset() {
+            if (confirm('盤面をリセットしますか？')) {
+                state.grid = [];
+                state.locked = false;
+                state.marks.fill(false);
+                state.bingo = false;
+                state.bingoLines = [];
+                state.bingoAchievedAt = null;
+                state.celebrationShown = false;
+                state.confettiRunning = false;
 
-        function draw(currentTime) {
-            const elapsed = currentTime - startTime;
-            
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            particles.forEach((p) => {
-                p.vy += p.gravity;
-                p.x += p.vx;
-                p.y += p.vy;
-                p.vx *= 0.99;
-                
-                if (elapsed > duration * 0.6) {
-                    p.life -= 0.025;
-                }
-                
-                if (p.life <= 0) return;
-                
-                ctx.save();
-                ctx.globalAlpha = Math.min(p.life, 0.95);
-                
-                if (p.type === 'confetti') {
-                    p.rotation += p.rotationSpeed;
-                    ctx.translate(p.x, p.y);
-                    ctx.rotate(p.rotation * Math.PI / 180);
-                    
-                    if (p.isAccent) {
-                        ctx.shadowColor = p.color;
-                        ctx.shadowBlur = 8;
-                    }
-                    
-                    ctx.fillStyle = p.color;
-                    ctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
-                    
-                } else if (p.type === 'spark') {
-                    ctx.strokeStyle = p.color;
-                    ctx.lineWidth = 2;
-                    ctx.shadowColor = p.color;
-                    ctx.shadowBlur = 6;
-                    
-                    const angle = Math.atan2(p.vy, p.vx);
-                    ctx.translate(p.x, p.y);
-                    ctx.rotate(angle);
-                    
-                    ctx.beginPath();
-                    ctx.moveTo(0, 0);
-                    ctx.lineTo(-p.length, 0);
-                    ctx.stroke();
-                }
-                
-                ctx.restore();
-            });
-            
-            particles = particles.filter(p => p.life > 0 && p.y < canvas.height + 50);
-            
-            if (elapsed < duration && particles.length > 0) {
-                confettiAnimationFrame = requestAnimationFrame(draw);
-            } else {
+                // UI/UX ENHANCE: Remove focus mode
+                els.app.classList.remove('focus-grid');
+                els.grid.classList.remove('grid-interactive');
+                document.body.classList.remove('vingo-phase');
+
                 stopConfetti();
+                hideCelebration();
+                render();
+                updateHint();
+                updateStepIndicator();
             }
         }
-        
-        confettiAnimationFrame = requestAnimationFrame(draw);
-    }
 
-    function stopConfetti() {
-        if (confettiAnimationFrame) {
-            cancelAnimationFrame(confettiAnimationFrame);
-            confettiAnimationFrame = null;
-        }
-        particles = [];
-        const canvas = els.confettiCanvas;
-        const ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        canvas.classList.remove('active');
-        state.confettiRunning = false;
-    }
-
-    /* ========================================
-       DISPLAY LOGIC
-       ======================================== */
-    
-    function showCelebration() {
-        state.celebrationShown = true;
-        els.celebrationOverlay.classList.add('visible');
-        
-        // UI/UX ENHANCE: VINGO phase styling
-        document.body.classList.add('vingo-phase');
-        
-        setTimeout(() => startConfetti(), 200);
-        setTimeout(() => hideCelebration(), CELEBRATION_DURATION);
-    }
-
-    function hideCelebration() {
-        els.celebrationOverlay.classList.remove('visible');
-        stopConfetti();
-    }
-
-    function replayCelebration() {
-        if (!state.bingo) return;
-        stopConfetti();
-        els.celebrationOverlay.classList.add('visible');
-        setTimeout(() => startConfetti(), 200);
-        setTimeout(() => hideCelebration(), CELEBRATION_DURATION);
-    }
-
-    function showHint(message, isWarning = false) {
-        els.hintText.textContent = message;
-        els.hintText.className = isWarning ? 'hint-text warning' : 'hint-text';
-        if (isWarning) setTimeout(() => updateHint(), 2000);
-    }
-
-    function updateHint() {
-        if (state.grid.length === 0) {
-            showHint('［ランダム］を押して開始');
-        } else if (!state.locked) {
-            showHint('［確定］でカードを固定してください');
-        } else {
-            showHint('曲が流れたらマスをタップ');
-        }
-    }
-
-    function render() {
-        els.statusText.textContent = state.locked ? '確定済み' : '未確定';
-        els.statusText.className = `status-value ${state.locked ? 'locked' : 'unlocked'}`;
-
-        els.btnRandom.disabled = state.locked;
-        els.btnLock.disabled = state.locked || !state.grid || state.grid.length === 0;
-
-        const highlightedCells = getHighlightedCells();
-        els.grid.innerHTML = '';
-        if (!state.grid || state.grid.length === 0) {
-            for (let i = 0; i < 9; i++) {
-                const cell = document.createElement('div');
-                cell.className = 'cell empty';
-                cell.textContent = '−';
-                els.grid.appendChild(cell);
+        function toggleMark(index) {
+            if (!state.locked) {
+                showHint('※○を付けるには［確定］が必要です', true);
+                return;
             }
-        } else {
-            state.grid.forEach((song, i) => {
-                const cell = document.createElement('div');
-                let classNames = 'cell';
-                if (state.marks[i]) classNames += ' marked';
-                if (highlightedCells.has(i)) classNames += ' bingo-line';
-                cell.className = classNames;
-                
-                const span = document.createElement('span');
-                span.textContent = song.title;
-                cell.appendChild(span);
 
-                cell.onclick = () => toggleMark(i);
-                els.grid.appendChild(cell);
+            const wasBingo = state.bingo;
+            state.marks[index] = !state.marks[index];
+            checkBingo();
+
+            if (state.bingo && !wasBingo && !state.celebrationShown) {
+                showCelebration();
+            }
+
+            if (!state.bingo && wasBingo) {
+                state.celebrationShown = false;
+                document.body.classList.remove('vingo-phase');
+            }
+
+            render();
+            updateStepIndicator();
+        }
+
+        function checkBingo() {
+            const winningLines = [];
+            for (let i = 0; i < BINGO_LINES.length; i++) {
+                const line = BINGO_LINES[i];
+                if (line.every(idx => state.marks[idx])) {
+                    winningLines.push(i);
+                }
+            }
+
+            state.bingoLines = winningLines;
+            state.bingo = winningLines.length > 0;
+
+            if (state.bingo && !state.bingoAchievedAt) {
+                state.bingoAchievedAt = new Date();
+            }
+        }
+
+        function getHighlightedCells() {
+            const cells = new Set();
+            for (const lineIdx of state.bingoLines) {
+                for (const cellIdx of BINGO_LINES[lineIdx]) {
+                    cells.add(cellIdx);
+                }
+            }
+            return cells;
+        }
+
+        function formatDate(date) {
+            if (!date) return '';
+            // Handle string dates (from JSON parse)
+            if (typeof date === 'string') {
+                date = new Date(date);
+            }
+            const y = date.getFullYear();
+            const m = (date.getMonth() + 1).toString().padStart(2, '0');
+            const d = date.getDate().toString().padStart(2, '0');
+            const hour = date.getHours().toString().padStart(2, '0');
+            const min = date.getMinutes().toString().padStart(2, '0');
+            return `${y}/${m}/${d} ${hour}:${min}`;
+        }
+
+        // UI/UX ENHANCE: Update step indicator
+        function updateStepIndicator() {
+            const steps = els.stepIndicator.querySelectorAll('.step');
+            let currentStep = 1;
+
+            if (state.bingo) {
+                currentStep = 4;
+            } else if (state.locked) {
+                currentStep = 3;
+            } else if (state.grid.length > 0) {
+                currentStep = 2;
+            }
+
+            steps.forEach((step, idx) => {
+                const stepNum = idx + 1;
+                step.classList.remove('active', 'completed');
+
+                if (stepNum < currentStep) {
+                    step.classList.add('completed');
+                } else if (stepNum === currentStep) {
+                    step.classList.add('active');
+                }
             });
         }
 
-        if (state.bingo) {
-            els.vingoBanner.classList.add('visible');
-            els.screenshotHint.classList.add('visible');
-            els.snsSection.classList.add('visible');
-            els.btnReplay.classList.add('visible');
-            
-            if (state.bingoAchievedAt) {
-                els.vingoTimestamp.textContent = `VINGO達成：${formatDate(state.bingoAchievedAt)}`;
-                els.vingoTimestamp.style.display = 'block';
+        /* ========================================
+           COLORFUL SIDE-CRACKER CONFETTI
+           ======================================== */
+        let confettiAnimationFrame = null;
+        let particles = [];
+
+        const ACCENT_COLORS = [
+            '#00E5FF', '#00B8D4',
+            '#FF2DD6', '#FF4FD8',
+            '#7C4DFF', '#FFD400'
+        ];
+
+        const GRAY_COLORS = [
+            '#ffffff', '#f5f5f5', '#eeeeee', '#e0e0e0', '#d5d5d5'
+        ];
+
+        function startConfetti() {
+            if (state.confettiRunning) return;
+            state.confettiRunning = true;
+
+            particles = [];
+            const canvas = els.confettiCanvas;
+            const ctx = canvas.getContext('2d');
+
+            canvas.classList.add('active');
+
+            const textRect = els.celebrationText.getBoundingClientRect();
+            const centerY = textRect.top + textRect.height / 2;
+            const leftX = textRect.left;
+            const rightX = textRect.right;
+
+            const particleCount = 60;
+            const sparkCount = 16;
+            const gravity = 0.15;
+
+            function getParticleColor() {
+                if (Math.random() < 0.7) {
+                    return { color: GRAY_COLORS[Math.floor(Math.random() * GRAY_COLORS.length)], isAccent: false };
+                } else {
+                    return { color: ACCENT_COLORS[Math.floor(Math.random() * ACCENT_COLORS.length)], isAccent: true };
+                }
             }
-        } else {
-            els.vingoBanner.classList.remove('visible');
-            els.screenshotHint.classList.remove('visible');
-            els.snsSection.classList.remove('visible');
-            els.btnReplay.classList.remove('visible');
-            els.vingoTimestamp.style.display = 'none';
+
+            for (let i = 0; i < particleCount / 2; i++) {
+                const { color, isAccent } = getParticleColor();
+                particles.push({
+                    type: 'confetti',
+                    x: leftX + Math.random() * 20,
+                    y: centerY + (Math.random() - 0.5) * 30,
+                    vx: Math.random() * 7 + 3,
+                    vy: -(Math.random() * 9 + 4),
+                    size: Math.random() * 7 + 4,
+                    color: color,
+                    isAccent: isAccent,
+                    rotation: Math.random() * 360,
+                    rotationSpeed: (Math.random() - 0.5) * 12,
+                    life: 1.0,
+                    gravity: gravity
+                });
+            }
+
+            for (let i = 0; i < particleCount / 2; i++) {
+                const { color, isAccent } = getParticleColor();
+                particles.push({
+                    type: 'confetti',
+                    x: rightX - Math.random() * 20,
+                    y: centerY + (Math.random() - 0.5) * 30,
+                    vx: -(Math.random() * 7 + 3),
+                    vy: -(Math.random() * 9 + 4),
+                    size: Math.random() * 7 + 4,
+                    color: color,
+                    isAccent: isAccent,
+                    rotation: Math.random() * 360,
+                    rotationSpeed: (Math.random() - 0.5) * 12,
+                    life: 1.0,
+                    gravity: gravity
+                });
+            }
+
+            for (let i = 0; i < sparkCount / 2; i++) {
+                const sparkColor = ACCENT_COLORS[Math.floor(Math.random() * 3)];
+                particles.push({
+                    type: 'spark',
+                    x: leftX,
+                    y: centerY,
+                    vx: Math.random() * 10 + 5,
+                    vy: -(Math.random() * 12 + 6),
+                    length: Math.random() * 15 + 8,
+                    color: sparkColor,
+                    life: 1.0,
+                    gravity: gravity * 0.8
+                });
+            }
+
+            for (let i = 0; i < sparkCount / 2; i++) {
+                const sparkColor = ACCENT_COLORS[Math.floor(Math.random() * 3)];
+                particles.push({
+                    type: 'spark',
+                    x: rightX,
+                    y: centerY,
+                    vx: -(Math.random() * 10 + 5),
+                    vy: -(Math.random() * 12 + 6),
+                    length: Math.random() * 15 + 8,
+                    color: sparkColor,
+                    life: 1.0,
+                    gravity: gravity * 0.8
+                });
+            }
+
+            let startTime = performance.now();
+            const duration = 1300;
+
+            function draw(currentTime) {
+                const elapsed = currentTime - startTime;
+
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                particles.forEach((p) => {
+                    p.vy += p.gravity;
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vx *= 0.99;
+
+                    if (elapsed > duration * 0.6) {
+                        p.life -= 0.025;
+                    }
+
+                    if (p.life <= 0) return;
+
+                    ctx.save();
+                    ctx.globalAlpha = Math.min(p.life, 0.95);
+
+                    if (p.type === 'confetti') {
+                        p.rotation += p.rotationSpeed;
+                        ctx.translate(p.x, p.y);
+                        ctx.rotate(p.rotation * Math.PI / 180);
+
+                        if (p.isAccent) {
+                            ctx.shadowColor = p.color;
+                            ctx.shadowBlur = 8;
+                        }
+
+                        ctx.fillStyle = p.color;
+                        ctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
+
+                    } else if (p.type === 'spark') {
+                        ctx.strokeStyle = p.color;
+                        ctx.lineWidth = 2;
+                        ctx.shadowColor = p.color;
+                        ctx.shadowBlur = 6;
+
+                        const angle = Math.atan2(p.vy, p.vx);
+                        ctx.translate(p.x, p.y);
+                        ctx.rotate(angle);
+
+                        ctx.beginPath();
+                        ctx.moveTo(0, 0);
+                        ctx.lineTo(-p.length, 0);
+                        ctx.stroke();
+                    }
+
+                    ctx.restore();
+                });
+
+                particles = particles.filter(p => p.life > 0 && p.y < canvas.height + 50);
+
+                if (elapsed < duration && particles.length > 0) {
+                    confettiAnimationFrame = requestAnimationFrame(draw);
+                } else {
+                    stopConfetti();
+                }
+            }
+
+            confettiAnimationFrame = requestAnimationFrame(draw);
         }
-    }
 
-    // Events
-    els.btnRandom.addEventListener('click', randomize);
-    els.btnLock.addEventListener('click', lock);
-    els.btnReset.addEventListener('click', reset);
-    els.btnReplay.addEventListener('click', replayCelebration);
-
-    // Diagnostics
-    window.runDiagnostics = function() {
-        console.log('=== VINGO Diagnostics ===');
-        let allPassed = true;
-
-        const test1 = songsMaster.length >= 9;
-        console.log(`[${test1 ? 'PASS' : 'FAIL'}] Song Master has >= 9 songs`);
-        allPassed = allPassed && test1;
-
-        const savedState = JSON.parse(JSON.stringify(state));
-        state.locked = false;
-        state.grid = [];
-        state.celebrationShown = false;
-        randomize();
-        const test2 = new Set(state.grid.map(s => s.id)).size === 9;
-        console.log(`[${test2 ? 'PASS' : 'FAIL'}] Grid has 9 unique songs`);
-        allPassed = allPassed && test2;
-
-        state.locked = true;
-        const gridBefore = [...state.grid];
-        randomize();
-        const test3 = JSON.stringify(gridBefore) === JSON.stringify(state.grid);
-        console.log(`[${test3 ? 'PASS' : 'FAIL'}] Randomize blocked when locked`);
-        allPassed = allPassed && test3;
-
-        state.marks = [true, true, true, false, false, false, false, false, false];
-        state.bingoAchievedAt = null;
-        checkBingo();
-        const test4 = state.bingo && state.bingoLines.includes(0);
-        const testTime = state.bingoAchievedAt !== null;
-        console.log(`[${test4 ? 'PASS' : 'FAIL'}] Bingo Row 1 detected`);
-        console.log(`[${testTime ? 'PASS' : 'FAIL'}] Timestamp recorded`);
-        allPassed = allPassed && test4 && testTime;
-
-        const canvas = document.getElementById('confetti-canvas');
-        const testCanvas = canvas && canvas.width > 0;
-        console.log(`[${testCanvas ? 'PASS' : 'FAIL'}] Confetti canvas initialized`);
-        allPassed = allPassed && testCanvas;
-        
-        // UI/UX ENHANCE: Test step indicator exists
-        const stepIndicator = document.getElementById('step-indicator');
-        const testSteps = stepIndicator && stepIndicator.querySelectorAll('.step').length === 4;
-        console.log(`[${testSteps ? 'PASS' : 'FAIL'}] Step indicator has 4 steps`);
-        allPassed = allPassed && testSteps;
-
-        Object.assign(state, savedState);
-        if (state.bingoAchievedAt && typeof state.bingoAchievedAt === 'string') {
-            state.bingoAchievedAt = new Date(state.bingoAchievedAt);
+        function stopConfetti() {
+            if (confettiAnimationFrame) {
+                cancelAnimationFrame(confettiAnimationFrame);
+                confettiAnimationFrame = null;
+            }
+            particles = [];
+            const canvas = els.confettiCanvas;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            canvas.classList.remove('active');
+            state.confettiRunning = false;
         }
-        render();
-        updateHint();
-        updateStepIndicator();
 
-        console.log('=========================');
-        console.log(allPassed ? '✅ ALL TESTS PASSED' : '❌ SOME TESTS FAILED');
-        return allPassed;
-    };
+        /* ========================================
+           DISPLAY LOGIC
+           ======================================== */
 
-    init();
+        function showCelebration() {
+            state.celebrationShown = true;
+            els.celebrationOverlay.classList.add('visible');
+
+            // UI/UX ENHANCE: VINGO phase styling
+            document.body.classList.add('vingo-phase');
+
+            setTimeout(() => startConfetti(), 200);
+            setTimeout(() => hideCelebration(), CELEBRATION_DURATION);
+        }
+
+        function hideCelebration() {
+            els.celebrationOverlay.classList.remove('visible');
+            stopConfetti();
+        }
+
+        function replayCelebration() {
+            if (!state.bingo) return;
+            stopConfetti();
+            els.celebrationOverlay.classList.add('visible');
+            setTimeout(() => startConfetti(), 200);
+            setTimeout(() => hideCelebration(), CELEBRATION_DURATION);
+        }
+
+        function showHint(message, isWarning = false) {
+            els.hintText.textContent = message;
+            els.hintText.className = isWarning ? 'hint-text warning' : 'hint-text';
+            if (isWarning) setTimeout(() => updateHint(), 2000);
+        }
+
+        function updateHint() {
+            if (state.grid.length === 0) {
+                showHint('［ランダム］を押して開始');
+            } else if (!state.locked) {
+                showHint('［確定］でカードを固定してください');
+            } else {
+                showHint('曲が流れたらマスをタップ');
+            }
+        }
+
+        function render() {
+            els.statusText.textContent = state.locked ? '確定済み' : '未確定';
+            els.statusText.className = `status-value ${state.locked ? 'locked' : 'unlocked'}`;
+
+            els.btnRandom.disabled = state.locked;
+            els.btnLock.disabled = state.locked || !state.grid || state.grid.length === 0;
+
+            const highlightedCells = getHighlightedCells();
+            els.grid.innerHTML = '';
+            if (!state.grid || state.grid.length === 0) {
+                for (let i = 0; i < 9; i++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell empty';
+                    cell.textContent = '−';
+                    els.grid.appendChild(cell);
+                }
+            } else {
+                state.grid.forEach((song, i) => {
+                    const cell = document.createElement('div');
+                    let classNames = 'cell';
+                    if (state.marks[i]) classNames += ' marked';
+                    if (highlightedCells.has(i)) classNames += ' bingo-line';
+                    cell.className = classNames;
+
+                    const span = document.createElement('span');
+                    span.textContent = song.title;
+                    cell.appendChild(span);
+
+                    cell.onclick = () => toggleMark(i);
+                    els.grid.appendChild(cell);
+                });
+            }
+
+            if (state.bingo) {
+                els.vingoBanner.classList.add('visible');
+                els.screenshotHint.classList.add('visible');
+                els.snsSection.classList.add('visible');
+                els.btnReplay.classList.add('visible');
+
+                if (state.bingoAchievedAt) {
+                    els.vingoTimestamp.textContent = `VINGO達成：${formatDate(state.bingoAchievedAt)}`;
+                    els.vingoTimestamp.style.display = 'block';
+                }
+            } else {
+                els.vingoBanner.classList.remove('visible');
+                els.screenshotHint.classList.remove('visible');
+                els.snsSection.classList.remove('visible');
+                els.btnReplay.classList.remove('visible');
+                els.vingoTimestamp.style.display = 'none';
+            }
+        }
+
+        // Events
+        els.btnRandom.addEventListener('click', randomize);
+        els.btnLock.addEventListener('click', lock);
+        els.btnReset.addEventListener('click', reset);
+        els.btnReplay.addEventListener('click', replayCelebration);
+
+        // Diagnostics
+        window.runDiagnostics = function () {
+            console.log('=== VINGO Diagnostics ===');
+            let allPassed = true;
+
+            const test1 = songsMaster.length >= 9;
+            console.log(`[${test1 ? 'PASS' : 'FAIL'}] Song Master has >= 9 songs`);
+            allPassed = allPassed && test1;
+
+            const savedState = JSON.parse(JSON.stringify(state));
+            state.locked = false;
+            state.grid = [];
+            state.celebrationShown = false;
+            randomize();
+            const test2 = new Set(state.grid.map(s => s.id)).size === 9;
+            console.log(`[${test2 ? 'PASS' : 'FAIL'}] Grid has 9 unique songs`);
+            allPassed = allPassed && test2;
+
+            state.locked = true;
+            const gridBefore = [...state.grid];
+            randomize();
+            const test3 = JSON.stringify(gridBefore) === JSON.stringify(state.grid);
+            console.log(`[${test3 ? 'PASS' : 'FAIL'}] Randomize blocked when locked`);
+            allPassed = allPassed && test3;
+
+            state.marks = [true, true, true, false, false, false, false, false, false];
+            state.bingoAchievedAt = null;
+            checkBingo();
+            const test4 = state.bingo && state.bingoLines.includes(0);
+            const testTime = state.bingoAchievedAt !== null;
+            console.log(`[${test4 ? 'PASS' : 'FAIL'}] Bingo Row 1 detected`);
+            console.log(`[${testTime ? 'PASS' : 'FAIL'}] Timestamp recorded`);
+            allPassed = allPassed && test4 && testTime;
+
+            const canvas = document.getElementById('confetti-canvas');
+            const testCanvas = canvas && canvas.width > 0;
+            console.log(`[${testCanvas ? 'PASS' : 'FAIL'}] Confetti canvas initialized`);
+            allPassed = allPassed && testCanvas;
+
+            // UI/UX ENHANCE: Test step indicator exists
+            const stepIndicator = document.getElementById('step-indicator');
+            const testSteps = stepIndicator && stepIndicator.querySelectorAll('.step').length === 4;
+            console.log(`[${testSteps ? 'PASS' : 'FAIL'}] Step indicator has 4 steps`);
+            allPassed = allPassed && testSteps;
+
+            Object.assign(state, savedState);
+            if (state.bingoAchievedAt && typeof state.bingoAchievedAt === 'string') {
+                state.bingoAchievedAt = new Date(state.bingoAchievedAt);
+            }
+            render();
+            updateHint();
+            updateStepIndicator();
+
+            console.log('=========================');
+            console.log(allPassed ? '✅ ALL TESTS PASSED' : '❌ SOME TESTS FAILED');
+            return allPassed;
+        };
+
+
+        /* =========================
+           THEME SYSTEM JS
+        ========================= */
+        (function () {
+            const THEMES = ["theme-simple", "theme-miku", "theme-rin", "theme-luka", "theme-meiko"];
+            const THEME_KEY = "vingo_theme";
+
+            function setTheme(theme) {
+                document.body.classList.remove(...THEMES);
+                // Fallback or migration for old keys
+                if (theme === "theme-vocaloid") theme = "theme-miku";
+                if (theme === "theme-social") theme = "theme-rin";
+
+                if (!THEMES.includes(theme)) theme = "theme-simple";
+
+                document.body.classList.add(theme);
+
+                // update buttons
+                const wrap = document.getElementById("themeSwitch");
+                if (wrap) {
+                    const btns = wrap.querySelectorAll("button[data-theme]");
+                    btns.forEach(b => {
+                        const isActive = b.dataset.theme === theme;
+                        b.setAttribute("aria-pressed", String(isActive));
+                    });
+
+                    // Scroll active button into view if needed
+                    const activeBtn = wrap.querySelector("button[aria-pressed='true']");
+                    if (activeBtn) {
+                        activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                    }
+                }
+
+                try { localStorage.setItem(THEME_KEY, theme); } catch (e) { }
+            }
+
+            function initTheme() {
+                let saved = null;
+                try { saved = localStorage.getItem(THEME_KEY); } catch (e) { }
+                if (!saved) saved = "theme-simple";
+                setTheme(saved);
+
+                const wrap = document.getElementById("themeSwitch");
+                if (wrap) {
+                    wrap.addEventListener("click", (e) => {
+                        const t = e.target;
+                        if (!(t instanceof HTMLElement)) return;
+                        const btn = t.closest("button[data-theme]");
+                        if (!btn) return;
+                        const theme = btn.getAttribute("data-theme");
+                        if (theme) {
+                            setTheme(theme);
+                        }
+                    });
+                }
+
+                // debug helper
+                window.VINGO_THEME = { setTheme };
+            }
+
+            if (document.readyState === "loading") {
+                document.addEventListener("DOMContentLoaded", initTheme);
+            } else {
+                initTheme();
+            }
+        })();
+
+        init();
 
     </script>
 </body>
