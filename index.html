@@ -6,18 +6,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VOCALOID BINGO</title>
     <style>
+        /* ========================================
+           LAYERS (z-index)
+           ======================================== */
+        :root {
+            --z-ui: 10;
+            /* 通常UI */
+            --z-buttons: 20;
+            /* ⚙️/共有リンク等の重要ボタン */
+            --z-confetti: 3000;
+            /* VINGO演出 (紙吹雪/クラッカー) */
+            --z-vingo-text: 3500;
+            /* VINGO文字 */
+            --z-modal-bg: 9000;
+            /* モーダル背景(backdrop) */
+            --z-modal: 9100;
+            /* モーダル本体 */
+            --z-toast: 9200;
+            /* トースト通知 */
+        }
+
         /* --- RESET & BASE --- */
         * {
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* UI/UX ENHANCE: Dynamic background that changes subtly */
         body {
+            /* ... existing body properties ... */
             margin: 0;
             padding: 0;
             font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
             background-color: #e8e8e8;
+            /* Default fallback */
             color: #111;
             display: flex;
             justify-content: center;
@@ -30,6 +51,161 @@
             background-color: #ddd;
         }
 
+
+
+        /* ========================================
+           BUTTONS (3D Feel & Feedback)
+           ======================================== */
+        /* Common button Base */
+        button,
+        .btn-large-primary,
+        .btn-medium-secondary,
+        .btn-primary,
+        .btn-secondary,
+        .btn-danger {
+            cursor: pointer;
+            transition: all 0.1s ease;
+            position: relative;
+            user-select: none;
+        }
+
+        /* Active state (Press down) */
+        button:active,
+        .btn-large-primary:active,
+        .btn-medium-secondary:active,
+        .btn-primary:active,
+        .btn-secondary:active,
+        .btn-danger:active {
+            transform: translateY(2px) !important;
+            box-shadow: none !important;
+        }
+
+        /* Large Primary Button (Join via QR) */
+        .btn-large-primary {
+            background: var(--accent);
+            color: var(--bg);
+            border: 2px solid rgba(0, 0, 0, 0.1);
+            /* Subtle border */
+            border-radius: 12px;
+            padding: 16px;
+            font-size: 18px;
+            font-weight: 900;
+            width: 100%;
+            box-shadow: 0 4px 0 rgba(0, 0, 0, 0.2);
+            /* 3D Shadow */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        /* Medium Secondary Button (Paste Link) */
+        .btn-medium-secondary {
+            background: var(--panel2);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-bottom-width: 3px;
+            /* Pseudo 3D */
+            border-radius: 12px;
+            padding: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            width: 100%;
+        }
+
+        /* Standard Controls */
+        .controls button {
+            box-shadow: 0 3px 0 var(--border);
+            /* 3D effect */
+            transform: translateY(0);
+        }
+
+        .controls button:active {
+            transform: translateY(3px);
+            box-shadow: 0 0 0 var(--border);
+        }
+
+        /* Modal Buttons */
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 12px;
+            font-weight: bold;
+            box-shadow: 0 3px 0 rgba(0, 0, 0, 0.2);
+            width: 100%;
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 10px;
+            font-weight: bold;
+            box-shadow: 0 2px 0 #bbb;
+        }
+
+        .btn-danger {
+            background: #fff0f0;
+            color: #d32f2f;
+            border: 1px solid #ffcdd2;
+            border-radius: 8px;
+            padding: 10px;
+            font-weight: bold;
+            box-shadow: 0 2px 0 #ef9a9a;
+        }
+
+        /* Light/Dark Text Adjustments for Buttons */
+        body.theme-miku .btn-large-primary,
+        body.theme-rin .btn-large-primary,
+        body.theme-kaito .btn-large-primary {
+            color: #000;
+        }
+
+        body.theme-luka .btn-large-primary,
+        body.theme-meiko .btn-large-primary,
+        body.theme-ren .btn-large-primary {
+            color: #fff;
+        }
+
+
+
+        /* Accordion for Manual Entry */
+        .manual-entry-accordion {
+            margin-top: 16px;
+            border-top: 1px solid var(--border);
+            padding-top: 16px;
+            width: 100%;
+        }
+
+        .accordion-toggle {
+            background: none;
+            border: none;
+            color: var(--muted);
+            font-size: 12px;
+            cursor: pointer;
+            padding: 8px;
+            text-decoration: underline;
+            width: 100%;
+            box-shadow: none;
+        }
+
+        .accordion-toggle:active {
+            transform: none !important;
+        }
+
+        .accordion-content {
+            display: none;
+            padding: 12px 0;
+        }
+
+        .accordion-content.visible {
+            display: block;
+        }
+
         /* --- LAYOUT --- */
         #app {
             width: 100%;
@@ -40,8 +216,9 @@
             flex-direction: column;
             position: relative;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            z-index: 10;
+            z-index: auto;
         }
+
 
         /* --- TYPOGRAPHY & HEADER --- */
         header {
@@ -302,23 +479,7 @@
             font-family: monospace;
         }
 
-        /* --- SCREENSHOT HINT --- */
-        .screenshot-hint {
-            display: none;
-            text-align: center;
-            background: #fffbe6;
-            border: 1px dashed #aaa;
-            padding: 8px;
-            margin-bottom: 8px;
-            font-size: 11px;
-            color: #444;
-            line-height: 1.4;
-            border-radius: 4px;
-        }
 
-        .screenshot-hint.visible {
-            display: block;
-        }
 
         /* ========================================
            UI/UX ENHANCE: GRID CARD (Layered Design)
@@ -617,8 +778,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 9000;
-            /* BACKDROP: lowest layer */
+            z-index: var(--z-confetti);
             opacity: 0;
             visibility: hidden;
             transition: opacity 0.3s ease, visibility 0.3s ease;
@@ -642,8 +802,7 @@
                 0 0 30px rgba(255, 255, 255, 0.8);
             animation: celebrationBounce 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             position: relative;
-            z-index: 10000;
-            /* VINGO TEXT: highest layer */
+            z-index: var(--z-vingo-text);
         }
 
         @keyframes celebrationBounce {
@@ -670,8 +829,7 @@
             width: 100%;
             height: 100%;
             pointer-events: none;
-            z-index: 9500;
-            /* EFFECTS: above overlay, below VINGO text */
+            z-index: var(--z-confetti);
             display: none;
         }
 
@@ -894,6 +1052,58 @@
             --vingoshadow: 0 20px 70px rgba(216, 31, 38, 0.3);
         }
 
+        /* Theme: Ren (Dark / Black & Yellow-Orange Neon) */
+        body.theme-ren {
+            --bg: #1a1508;
+            /* Deep dark yellowish black */
+            --text: #fff8e1;
+            /* Light warm white */
+            --muted: #b5a882;
+            --panel: #251d0d;
+            --panel2: #332810;
+            --border: #FFB300;
+            --shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            --accent: #FFB300;
+            --accent2: #ffe082;
+            --btnbg: #2d2211;
+            --btntext: #fff8e1;
+            --btnborder: #FFB300;
+            --cellbg: #2d2211;
+            --cellborder: #806622;
+            --cellhover: #3d3018;
+            --mark: #FFB300;
+            --markglow: 0 0 12px rgba(255, 179, 0, 0.5);
+            --vingobg: rgba(37, 29, 13, 0.95);
+            --vingotext: #FFB300;
+            --vingoshadow: 0 20px 60px rgba(255, 179, 0, 0.2);
+        }
+
+        /* Theme: Kaito (Light / Bright Blue & White) */
+        body.theme-kaito {
+            --bg: #f0f8ff;
+            /* Alice blue */
+            --text: #0a1929;
+            /* Dark navy */
+            --muted: #5a7a9a;
+            --panel: #ffffff;
+            --panel2: #e3f2fd;
+            --border: #2F7DE1;
+            --shadow: 0 8px 24px rgba(47, 125, 225, 0.15);
+            --accent: #2F7DE1;
+            --accent2: #64b5f6;
+            --btnbg: #ffffff;
+            --btntext: #0a1929;
+            --btnborder: #2F7DE1;
+            --cellbg: #fafeff;
+            --cellborder: #64b5f6;
+            --cellhover: #e3f2fd;
+            --mark: #2F7DE1;
+            --markglow: 0 0 8px rgba(47, 125, 225, 0.4);
+            --vingobg: rgba(255, 255, 255, 0.95);
+            --vingotext: #1565c0;
+            --vingoshadow: 0 20px 70px rgba(47, 125, 225, 0.25);
+        }
+
         /* Apply */
         body {
             background: var(--bg);
@@ -929,7 +1139,8 @@
 
         /* Dark themes switcher adjustments */
         body.theme-luka .theme-switch,
-        body.theme-meiko .theme-switch {
+        body.theme-meiko .theme-switch,
+        body.theme-ren .theme-switch {
             background: rgba(0, 0, 0, 0.3);
             border-color: var(--accent);
         }
@@ -1011,16 +1222,18 @@
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
         }
 
-        /* Light themes (Miku/Rin) - Active button text must be dark */
+        /* Light themes (Miku/Rin/Kaito) - Active button text must be dark */
         body.theme-miku .theme-switch button[aria-pressed="true"],
-        body.theme-rin .theme-switch button[aria-pressed="true"] {
+        body.theme-rin .theme-switch button[aria-pressed="true"],
+        body.theme-kaito .theme-switch button[aria-pressed="true"] {
             color: #052026;
             /* Dark text for contrast against bright accent */
         }
 
-        /* Dark themes (Luka/Meiko) - Active button text must be light or dark depending on accent brightness */
+        /* Dark themes (Luka/Meiko/Ren) - Active button text must be light or dark depending on accent brightness */
         body.theme-luka .theme-switch button[aria-pressed="true"],
-        body.theme-meiko .theme-switch button[aria-pressed="true"] {
+        body.theme-meiko .theme-switch button[aria-pressed="true"],
+        body.theme-ren .theme-switch button[aria-pressed="true"] {
             color: #fff;
             /* White text on dark/rich accents */
         }
@@ -1076,7 +1289,8 @@
 
         /* Dark theme specific text brightness boost */
         body.theme-luka .cell,
-        body.theme-meiko .cell {
+        body.theme-meiko .cell,
+        body.theme-ren .cell {
             text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
             /* subtle shadow to pop text from dark bg */
         }
@@ -1109,7 +1323,7 @@
 
         /* Celebration Overlay - VISIBILITY GUARANTEE */
         #celebration-overlay {
-            z-index: 9999;
+            z-index: var(--z-confetti);
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(4px);
         }
@@ -1124,7 +1338,7 @@
                 1px -1px 0 var(--panel),
                 -1px 1px 0 var(--panel),
                 0 0 40px var(--accent);
-            z-index: 10000;
+            z-index: var(--z-vingo-text);
         }
 
         header {
@@ -1156,12 +1370,14 @@
 
         /* Step number text color fix for contrast */
         body.theme-miku .step.active .step-num,
-        body.theme-rin .step.active .step-num {
+        body.theme-rin .step.active .step-num,
+        body.theme-kaito .step.active .step-num {
             color: #000;
         }
 
         body.theme-luka .step.active .step-num,
-        body.theme-meiko .step.active .step-num {
+        body.theme-meiko .step.active .step-num,
+        body.theme-ren .step.active .step-num {
             color: #fff;
         }
 
@@ -1173,13 +1389,498 @@
             color: var(--text);
             font-weight: 700;
         }
+
+        /* ========================================
+           EVENT NAME SYSTEM
+           ======================================== */
+        .event-name-container {
+            width: 100%;
+            max-width: 480px;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .event-name-display {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            background: var(--panel2);
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            max-width: 100%;
+            min-height: 44px;
+        }
+
+        .event-name-display:hover,
+        .event-name-display:focus {
+            background: var(--cellhover);
+            outline: none;
+        }
+
+        .event-name-text {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 200px;
+        }
+
+        .event-name-edit-icon {
+            font-size: 12px;
+            opacity: 0.6;
+            flex-shrink: 0;
+        }
+
+        /* Event Name Editor */
+        .event-name-editor {
+            margin-top: 8px;
+            padding: 12px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        .event-name-editor input {
+            width: 100%;
+            padding: 10px 12px;
+            font-size: 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--cellbg);
+            color: var(--text);
+            margin-bottom: 10px;
+        }
+
+        .event-name-editor input::placeholder {
+            color: var(--muted);
+        }
+
+        .event-name-editor input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .event-name-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .event-name-buttons button {
+            padding: 8px 16px;
+            font-size: 12px;
+            font-weight: 700;
+            border-radius: 8px;
+            min-height: 44px;
+        }
+
+        #event-name-save {
+            background: var(--accent);
+            color: var(--bg);
+            border-color: var(--accent);
+        }
+
+        /* Light themes save button text */
+        body.theme-miku #event-name-save,
+        body.theme-rin #event-name-save,
+        body.theme-kaito #event-name-save {
+            color: #000;
+        }
+
+        /* Dark themes save button text */
+        body.theme-luka #event-name-save,
+        body.theme-meiko #event-name-save,
+        body.theme-ren #event-name-save {
+            color: #fff;
+        }
+
+        #event-name-reset {
+            background: transparent;
+            color: var(--muted);
+            border-color: var(--border);
+        }
+
+        /* ========================================
+           SETTINGS MODAL SYSTEM
+           ======================================== */
+        .settings-btn {
+            position: fixed;
+            top: 12px;
+            right: 12px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            font-size: 18px;
+            cursor: pointer;
+            z-index: var(--z-buttons);
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .settings-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .settings-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: var(--z-modal-bg);
+            display: none;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 16px;
+            overflow-y: auto;
+        }
+
+        .settings-modal-overlay.visible {
+            display: flex;
+        }
+
+        .settings-modal {
+            width: 100%;
+            max-width: 480px;
+            background: var(--panel);
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            margin: auto;
+            z-index: var(--z-modal);
+        }
+
+        .settings-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            background: var(--panel);
+            z-index: 1;
+            border-radius: 16px 16px 0 0;
+        }
+
+        .settings-header h2 {
+            margin: 0;
+            font-size: 18px;
+            color: var(--text);
+        }
+
+        .settings-close {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: transparent;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .settings-body {
+            padding: 16px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .settings-section {
+            margin-bottom: 20px;
+        }
+
+        .settings-section label {
+            display: block;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 6px;
+        }
+
+        .settings-section input,
+        .settings-section textarea {
+            width: 100%;
+            padding: 12px;
+            font-size: 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--cellbg);
+            color: var(--text);
+        }
+
+        .settings-section input::placeholder,
+        .settings-section textarea::placeholder {
+            color: var(--muted);
+        }
+
+        .settings-section input:focus,
+        .settings-section textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .settings-section textarea {
+            min-height: 180px;
+            resize: vertical;
+            font-family: monospace;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .settings-hint {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        .song-count {
+            font-size: 12px;
+            color: var(--accent);
+            font-weight: 700;
+            margin-top: 4px;
+        }
+
+        .song-count.error {
+            color: #c00;
+        }
+
+        .settings-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .settings-actions button {
+            width: 100%;
+            padding: 14px;
+            font-size: 14px;
+            font-weight: 700;
+            border-radius: 10px;
+            min-height: 48px;
+        }
+
+        .settings-btn-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .settings-btn-row button {
+            flex: 1;
+        }
+
+        .btn-primary {
+            background: var(--accent) !important;
+            color: var(--bg) !important;
+            border-color: var(--accent) !important;
+        }
+
+        /* Light themes primary button text */
+        body.theme-miku .btn-primary,
+        body.theme-rin .btn-primary,
+        body.theme-kaito .btn-primary {
+            color: #000 !important;
+        }
+
+        /* Dark themes primary button text */
+        body.theme-luka .btn-primary,
+        body.theme-meiko .btn-primary,
+        body.theme-ren .btn-primary {
+            color: #fff !important;
+        }
+
+        .btn-secondary {
+            background: var(--panel2) !important;
+            color: var(--text) !important;
+        }
+
+        .btn-danger {
+            background: transparent !important;
+            color: #c00 !important;
+            border-color: #c00 !important;
+        }
+
+        /* Share Code Display */
+        .share-code-area {
+            width: 100%;
+            min-height: 100px;
+            max-height: 200px;
+            padding: 12px;
+            font-size: 10px;
+            font-family: monospace;
+            background: var(--panel2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            word-break: break-all;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            color: var(--text);
+        }
+
+        .share-code-hint {
+            font-size: 11px;
+            color: var(--muted);
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+
+        /* QR Display */
+        .qr-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            gap: 16px;
+        }
+
+        .qr-canvas-wrapper {
+            background: #fff;
+            padding: 16px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .qr-hint {
+            font-size: 11px;
+            color: var(--muted);
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 13px;
+            z-index: var(--z-toast);
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            max-width: 90%;
+            text-align: center;
+        }
+
+        .toast.visible {
+            opacity: 1;
+        }
+
+        .toast.error {
+            background: #c00;
+        }
+
+        .toast.success {
+            background: #090;
+        }
+
+        /* Load Code Entry */
+        .load-code-entry {
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        .load-code-link {
+            font-size: 12px;
+            color: var(--accent);
+            cursor: pointer;
+            text-decoration: underline;
+            padding: 8px 16px;
+            display: inline-block;
+        }
+
+        .load-code-link:hover {
+            opacity: 0.8;
+        }
+
+        /* Back button in modal views */
+        .settings-back {
+            background: transparent;
+            border: none;
+            color: var(--accent);
+            font-size: 14px;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Safety: ensure share link button is always clickable */
+        #btn-input-link {
+            position: relative;
+            z-index: var(--z-buttons);
+            pointer-events: auto;
+        }
+
+        /* ========================================
+           MODAL-OPEN: VINGO UIを確実に隠す
+           ======================================== */
+        body.modal-open {
+            overflow: hidden;
+        }
+
+        body.modal-open .vingo-banner-container,
+        body.modal-open #vingo-banner,
+        body.modal-open #sns-section,
+        body.modal-open #btn-replay,
+        body.modal-open #celebration-overlay,
+        body.modal-open #confetti-canvas {
+            display: none !important;
+        }
     </style>
 </head>
 
 <body>
 
+    <!-- Settings Button (Fixed) -->
+    <button class="settings-btn" id="settings-btn" aria-label="設定">⚙️</button>
+
     <div id="app">
-        <!-- THEME SWITCH UI -->
+        <!-- 1. Header (TITLE) -->
+        <header>
+            <h1>Vocaloid<br>↓ Bingo. ↓</h1>
+            <div class="subtitle">3×3 ビンゴカード</div>
+        </header>
+
+        <!-- 2. EVENT NAME -->
+        <div class="event-name-container" id="event-name-container">
+            <div class="event-name-display" id="event-name-display" tabindex="0" role="button"
+                aria-label="イベント名をタップして編集">
+                <span class="event-name-text" id="event-name-text">VINGO EVENT</span>
+                <span class="event-name-edit-icon">✏️</span>
+            </div>
+            <div class="event-name-editor" id="event-name-editor" style="display: none;">
+                <input type="text" id="event-name-input" maxlength="30" placeholder="イベント名を入力...">
+                <div class="event-name-buttons">
+                    <button type="button" id="event-name-save">保存</button>
+                    <button type="button" id="event-name-cancel">キャンセル</button>
+                    <button type="button" id="event-name-reset">リセット</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. THEME SWITCH UI -->
         <div class="theme-switch" id="themeSwitch" aria-label="デザイン切替">
             <div class="row">
                 <div class="label">🎨 デザイン</div>
@@ -1187,16 +1888,19 @@
                     <button type="button" data-theme="theme-simple" aria-pressed="true">シンプル</button>
                     <button type="button" data-theme="theme-miku" aria-pressed="false">ミク</button>
                     <button type="button" data-theme="theme-rin" aria-pressed="false">リン</button>
+                    <button type="button" data-theme="theme-ren" aria-pressed="false">レン</button>
                     <button type="button" data-theme="theme-luka" aria-pressed="false">ルカ</button>
                     <button type="button" data-theme="theme-meiko" aria-pressed="false">メイコ</button>
+                    <button type="button" data-theme="theme-kaito" aria-pressed="false">カイト</button>
                 </div>
             </div>
         </div>
 
-        <header>
-            <h1>Vocaloid<br>↓ Bingo. ↓</h1>
-            <div class="subtitle">3×3 ビンゴカード</div>
-        </header>
+        <!-- 4. PARTICIPANT ACTIONS (QR Removed) -->
+        <div class="welcome-actions">
+            <!-- Renamed button for clarity -->
+            <button id="btn-input-link" class="btn-medium-secondary">🔗 共有リンクを貼る（読み込む）</button>
+        </div>
 
         <!-- UI/UX ENHANCE: Step Indicator -->
         <div class="step-indicator" id="step-indicator">
@@ -1229,19 +1933,16 @@
 
         <div id="hint-text" class="hint-text"></div>
 
-        <!-- PHASE 2: VINGO Banner (Screenshot-Ready) -->
+        <!-- PHASE 2: VINGO Banner (Screenshot Button Removed) -->
         <div class="vingo-banner-container">
             <div id="vingo-banner" class="vingo-banner">
                 <p class="vingo-banner-text">VINGO!</p>
                 <div class="vingo-banner-sub">↓ ビンゴ達成！↓</div>
                 <div id="vingo-timestamp" class="vingo-timestamp"></div>
+                <!-- Text Hint Instead of Button -->
+                <p style="margin-top:10px; font-size:12px; opacity:0.8; font-weight:bold;">📸
+                    この画面をスクショしてね！（VINGO！とビンゴ状況が写ります）</p>
             </div>
-        </div>
-
-        <!-- Screenshot Hint -->
-        <div id="screenshot-hint" class="screenshot-hint">
-            📸 この画面をスクショしてね！<br>
-            <small>VINGO！とビンゴ状況が写ります</small>
         </div>
 
         <!-- Replay Celebration Button -->
@@ -1257,7 +1958,7 @@
             <div class="sns-title">スクショをDMで送ってね！</div>
             <div class="sns-steps">
                 <p>① 上の画面をスクリーンショット</p>
-                <p>② 下のボタンから かい のSNSへ</p>
+                <p id="sns-step2">② 下のボタンからSNSへ</p>
                 <p>③ DMにスクショを貼って送信</p>
             </div>
             <div class="sns-buttons">
@@ -1289,6 +1990,25 @@
             <div class="footer-note">Vocaloid Dance Hall 2026</div>
         </footer>
     </div>
+
+    <!-- Settings Modal -->
+    <div class="settings-modal-overlay" id="settings-modal">
+        <div class="settings-modal">
+            <div class="settings-header">
+                <h2 id="settings-title">⚙️ イベント設定</h2>
+                <button class="settings-close" id="settings-close">×</button>
+            </div>
+            <div class="settings-body" id="settings-body">
+                <!-- Dynamic content -->
+            </div>
+            <div class="settings-actions" id="settings-actions">
+                <!-- Dynamic buttons -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast"></div>
 
     <!-- PHASE 1: Celebration Overlay -->
     <div id="celebration-overlay">
@@ -1601,6 +2321,31 @@
         const CELEBRATION_DURATION = 1400;
 
         /* ========================================
+           TOAST NOTIFICATION
+           ======================================== */
+        function showToast(message, type = '') {
+            const toast = document.getElementById('toast');
+            if (!toast) return;
+            toast.textContent = message;
+            toast.className = 'toast visible' + (type ? ' ' + type : '');
+            clearTimeout(showToast._timer);
+            showToast._timer = setTimeout(() => {
+                toast.classList.remove('visible');
+            }, 3000);
+        }
+
+        /* ========================================
+           GET SONGS (with custom song support)
+           ======================================== */
+        function getSongsMaster() {
+            if (typeof VingoSettings !== 'undefined') {
+                const customSongs = VingoSettings.getSongs();
+                if (customSongs) return customSongs;
+            }
+            return songsMaster;
+        }
+
+        /* ========================================
            DOM ELEMENTS
            ======================================== */
         const els = {
@@ -1616,7 +2361,6 @@
             vingoBanner: document.getElementById('vingo-banner'),
             vingoTimestamp: document.getElementById('vingo-timestamp'),
             snsSection: document.getElementById('sns-section'),
-            screenshotHint: document.getElementById('screenshot-hint'),
             celebrationOverlay: document.getElementById('celebration-overlay'),
             celebrationText: document.getElementById('celebration-text'),
             confettiCanvas: document.getElementById('confetti-canvas'),
@@ -1652,12 +2396,13 @@
         function randomize() {
             if (state.locked) return;
 
-            if (songsMaster.length < 9) {
+            const songs = typeof getSongsMaster === 'function' ? getSongsMaster() : songsMaster;
+            if (songs.length < 9) {
                 alert('曲数が足りません（9曲以上必要）');
                 return;
             }
 
-            const shuffled = [...songsMaster];
+            const shuffled = [...songs];
             for (let i = shuffled.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
@@ -2096,7 +2841,6 @@
 
             if (state.bingo) {
                 els.vingoBanner.classList.add('visible');
-                els.screenshotHint.classList.add('visible');
                 els.snsSection.classList.add('visible');
                 els.btnReplay.classList.add('visible');
 
@@ -2106,7 +2850,6 @@
                 }
             } else {
                 els.vingoBanner.classList.remove('visible');
-                els.screenshotHint.classList.remove('visible');
                 els.snsSection.classList.remove('visible');
                 els.btnReplay.classList.remove('visible');
                 els.vingoTimestamp.style.display = 'none';
@@ -2182,7 +2925,7 @@
            THEME SYSTEM JS
         ========================= */
         (function () {
-            const THEMES = ["theme-simple", "theme-miku", "theme-rin", "theme-luka", "theme-meiko"];
+            const THEMES = ["theme-simple", "theme-miku", "theme-rin", "theme-ren", "theme-luka", "theme-meiko", "theme-kaito"];
             const THEME_KEY = "vingo_theme";
 
             function setTheme(theme) {
@@ -2245,7 +2988,692 @@
             }
         })();
 
+        /* =========================
+           EVENT NAME SYSTEM
+        ========================= */
+        (function () {
+            const EVENT_NAME_KEY = "vingo_event_name";
+            const DEFAULT_EVENT_NAME = "VINGO EVENT";
+
+            let isEditing = false;
+
+            function getEventName() {
+                try {
+                    return localStorage.getItem(EVENT_NAME_KEY) || DEFAULT_EVENT_NAME;
+                } catch (e) {
+                    return DEFAULT_EVENT_NAME;
+                }
+            }
+
+            function saveEventName(name) {
+                try {
+                    if (name && name.trim()) {
+                        localStorage.setItem(EVENT_NAME_KEY, name.trim().slice(0, 30));
+                    } else {
+                        localStorage.removeItem(EVENT_NAME_KEY);
+                    }
+                } catch (e) { }
+            }
+
+            function updateDisplay() {
+                const textEl = document.getElementById("event-name-text");
+                if (textEl) {
+                    textEl.textContent = getEventName();
+                }
+            }
+
+            function openEditor() {
+                if (isEditing) return;
+                isEditing = true;
+
+                const display = document.getElementById("event-name-display");
+                const editor = document.getElementById("event-name-editor");
+                const input = document.getElementById("event-name-input");
+
+                if (display) display.style.display = "none";
+                if (editor) editor.style.display = "block";
+                if (input) {
+                    input.value = getEventName() === DEFAULT_EVENT_NAME ? "" : getEventName();
+                    input.focus();
+                }
+            }
+
+            function closeEditor() {
+                isEditing = false;
+
+                const display = document.getElementById("event-name-display");
+                const editor = document.getElementById("event-name-editor");
+
+                if (display) display.style.display = "inline-flex";
+                if (editor) editor.style.display = "none";
+            }
+
+            function handleSave() {
+                const input = document.getElementById("event-name-input");
+                if (input) {
+                    const value = input.value.trim();
+                    if (value) {
+                        saveEventName(value);
+                    }
+                }
+                updateDisplay();
+                closeEditor();
+            }
+
+            function handleReset() {
+                if (confirm("イベント名をリセットしますか？")) {
+                    try {
+                        localStorage.removeItem(EVENT_NAME_KEY);
+                    } catch (e) { }
+                    updateDisplay();
+                    closeEditor();
+                }
+            }
+
+            function initEventName() {
+                updateDisplay();
+
+                const display = document.getElementById("event-name-display");
+                const saveBtn = document.getElementById("event-name-save");
+                const cancelBtn = document.getElementById("event-name-cancel");
+                const resetBtn = document.getElementById("event-name-reset");
+                const input = document.getElementById("event-name-input");
+
+                if (display) {
+                    display.addEventListener("click", openEditor);
+                    display.addEventListener("keydown", (e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            openEditor();
+                        }
+                    });
+                }
+
+                if (saveBtn) saveBtn.addEventListener("click", handleSave);
+                if (cancelBtn) cancelBtn.addEventListener("click", closeEditor);
+                if (resetBtn) resetBtn.addEventListener("click", handleReset);
+
+                if (input) {
+                    input.addEventListener("keydown", (e) => {
+                        if (e.key === "Enter") {
+                            handleSave();
+                        } else if (e.key === "Escape") {
+                            closeEditor();
+                        }
+                    });
+                }
+            }
+
+            if (document.readyState === "loading") {
+                document.addEventListener("DOMContentLoaded", initEventName);
+            } else {
+                initEventName();
+            }
+        })();
+
+        /* =========================
+           VINGO SETTINGS SYSTEM
+        ========================= */
+        /* =========================
+           VINGO SETTINGS SYSTEM
+        ========================= */
+        /* =========================
+           VINGO SETTINGS SYSTEM
+        ========================= */
+        const VingoSettings = (function () {
+            const SETTINGS_KEY = "vingo_settings_json";
+            const DEFAULT_SETTINGS = {
+                v: 1,
+                eventName: "VINGO EVENT",
+                organizerName: "",
+                xTarget: "@ka1note_D",
+                igTarget: "ka1note",
+                songs: null
+            };
+
+            function load() {
+                try {
+                    const json = localStorage.getItem(SETTINGS_KEY);
+                    if (json) {
+                        const parsed = JSON.parse(json);
+                        return { ...DEFAULT_SETTINGS, ...parsed };
+                    }
+                } catch (e) { }
+                return { ...DEFAULT_SETTINGS };
+            }
+
+            function save(settings) {
+                try {
+                    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+                } catch (e) { }
+            }
+
+            function reset() {
+                try {
+                    localStorage.removeItem(SETTINGS_KEY);
+                    localStorage.removeItem("vingo_event_name");
+                } catch (e) { }
+            }
+
+            function generateCode(settings) {
+                return JSON.stringify(settings);
+            }
+
+            function parseCode(code) {
+                try {
+                    const parsed = JSON.parse(code.trim());
+                    return validateSettings(parsed);
+                } catch (e) {
+                    return { valid: false, error: "データ形式が正しくありません" };
+                }
+            }
+
+            function validateSettings(settings) {
+                if (!settings || typeof settings !== 'object') {
+                    return { valid: false, error: "無効なデータ形式です" };
+                }
+
+                // Fallback for missing v
+                if (settings.v === undefined) settings.v = 1;
+
+                if (settings.songs) {
+                    if (!Array.isArray(settings.songs)) {
+                        return { valid: false, error: "曲リストの形式が正しくありません" };
+                    }
+                    // Limit songs to 300 (per spec) and filter
+                    let validSongs = settings.songs.filter(s => s && typeof s === 'string' && s.trim());
+                    if (validSongs.length > 300) {
+                        validSongs = validSongs.slice(0, 300);
+                    }
+                    if (validSongs.length < 9) {
+                        return { valid: false, error: "曲数が不足しています（9曲以上必要）" };
+                    }
+                    settings.songs = validSongs;
+                }
+
+                // Event name limit
+                if (settings.eventName && settings.eventName.length > 30) {
+                    settings.eventName = settings.eventName.substring(0, 30);
+                }
+
+                return { valid: true, settings: settings };
+            }
+
+            function applySettings(settings) {
+                save(settings);
+                // Update event name display
+                const textEl = document.getElementById("event-name-text");
+                if (textEl && settings.eventName) {
+                    textEl.textContent = settings.eventName;
+                    try {
+                        localStorage.setItem("vingo_event_name", settings.eventName);
+                    } catch (e) { }
+                }
+                // Update organizer name in SNS step
+                updateOrganizerNameDisplay(settings.organizerName);
+                // Update SNS links
+                updateSnsLinks(settings);
+            }
+
+            function getSongs() {
+                const settings = load();
+                if (settings.songs && settings.songs.length >= 9) {
+                    return settings.songs.filter(s => s && s.trim()).map((title, i) => ({ id: i + 1, title: title.trim() }));
+                }
+                return null;
+            }
+
+            function getCurrentSettingsForExport() {
+                const settings = load();
+                if (!settings.songs) {
+                    settings.songs = songsMaster.map(s => s.title);
+                }
+                return settings;
+            }
+
+            // --- Base64 URL Safe ---
+            function base64UrlEncode(str) {
+                try {
+                    const base64 = btoa(unescape(encodeURIComponent(str)));
+                    return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+                } catch (e) {
+                    console.error("Encode error", e);
+                    return "";
+                }
+            }
+
+            function base64Decode(str) {
+                try {
+                    let base64 = str.replace(/-/g, '+').replace(/_/g, '/');
+                    while (base64.length % 4) base64 += '=';
+                    return decodeURIComponent(escape(atob(base64)));
+                } catch (e) {
+                    return null;
+                }
+            }
+
+            // --- Sharing ---
+            function getShareUrl(settings) {
+                const json = generateCode(settings);
+                const base64 = base64UrlEncode(json);
+                const baseUrl = location.origin + location.pathname;
+                // Spec: ?v=1&cfg=...
+                return `${baseUrl}?v=1&cfg=${base64}`;
+            }
+
+
+
+            return {
+                load, save, reset,
+                generateCode, parseCode, validateSettings, applySettings,
+                getSongs, getCurrentSettingsForExport,
+                base64Decode, getShareUrl
+            };
+        })();
+
+        // Update organizer name in SNS step 2 text
+        function updateOrganizerNameDisplay(name) {
+            const step2 = document.getElementById('sns-step2');
+            if (step2) {
+                step2.textContent = name && name.trim()
+                    ? `② 下のボタンから ${name.trim()} のSNSへ`
+                    : '② 下のボタンからSNSへ';
+            }
+        }
+
+        // Updated Sns Links
+        function updateSnsLinks(settings) {
+            if (!settings) settings = VingoSettings.load();
+            const xBtn = document.querySelector('.sns-btn.twitter');
+            const igBtn = document.querySelector('.sns-btn:not(.twitter)');
+
+            if (xBtn) {
+                if (settings.xTarget && settings.xTarget.trim()) {
+                    let xUrl = settings.xTarget.trim();
+                    if (xUrl.startsWith('@')) xUrl = 'https://x.com/' + xUrl.slice(1);
+                    else if (!xUrl.startsWith('http')) xUrl = 'https://x.com/' + xUrl;
+                    xBtn.href = xUrl;
+                    xBtn.style.display = '';
+                } else {
+                    xBtn.style.display = 'none';
+                }
+            }
+
+            if (igBtn) {
+                if (settings.igTarget && settings.igTarget.trim()) {
+                    let igUrl = settings.igTarget.trim();
+                    if (!igUrl.startsWith('http')) {
+                        // Assume username
+                        const user = igUrl.replace('@', '').replace(/\/$/, '');
+                        igUrl = 'https://www.instagram.com/' + user + '/';
+                    }
+                    igBtn.href = igUrl;
+                    igBtn.style.display = '';
+                } else {
+                    igBtn.style.display = 'none';
+                }
+            }
+        }
+
+
+
+        /* =========================
+           URL PARAMETER & RESCUE
+        ========================= */
+        function applyCfg(cfgStr) {
+            const jsonStr = VingoSettings.base64Decode(cfgStr);
+            if (!jsonStr) {
+                showRescueModal("データの読み込みに失敗しました（デコード失敗）");
+                return;
+            }
+
+            const result = VingoSettings.parseCode(jsonStr);
+            if (result.valid) {
+                VingoSettings.applySettings(result.settings);
+
+                // Clean URL
+                const newUrl = location.pathname; // Remove query
+                history.replaceState({}, '', newUrl);
+
+                showToast(`✅ イベント設定を読み込みました：${result.settings.eventName}`, 'success');
+
+                // Reload to refresh game contents if needed
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
+            } else {
+                showRescueModal("設定データが無効です：" + result.error);
+            }
+        }
+
+        function checkUrlSettings() {
+            const params = new URLSearchParams(location.search);
+            const cfg = params.get('cfg') || params.get('c') || params.get('settings');
+
+            if (cfg) {
+                applyCfg(cfg);
+            }
+        }
+
+        function showRescueModal(msg) {
+            showToast('⚠️ ' + msg, 'error');
+            // Show manual entry modal as rescue
+            SettingsModal.open('load');
+            // Pre-fill error if possible or show help text
+            const hint = document.querySelector('#load-code-view .settings-hint');
+            if (hint) hint.textContent = "読み込みに失敗しました。共有リンクをコピーして貼り付けてください。";
+        }
+
+
+
+        /* =========================
+           INIT WELCOME UI
+        ========================= */
+        function initWelcomeUI() {
+            // Link Input Button
+            document.getElementById('btn-input-link')?.addEventListener('click', () => {
+                // Scroll to manual entry or open modal
+                // For now, let's open the Load Code view of Settings Modal
+                SettingsModal.open('load');
+            });
+
+            // Check URL on init
+            checkUrlSettings();
+        }
+
+        // Initialize settings UI after DOM ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                initSettingsUI();
+                initWelcomeUI();
+            });
+        } else {
+            initSettingsUI();
+            initWelcomeUI();
+        }
+
         init();
+        const SettingsModal = (function () {
+            let currentView = 'main';
+
+            function open(view = 'main') {
+                currentView = view;
+                const modal = document.getElementById('settings-modal');
+                if (modal) {
+                    modal.classList.add('visible');
+                    document.body.classList.add('modal-open');
+                    renderView(view);
+                }
+            }
+
+            function close() {
+                const modal = document.getElementById('settings-modal');
+                if (modal) {
+                    modal.classList.remove('visible');
+                }
+                document.body.classList.remove('modal-open');
+            }
+
+            function renderView(view) {
+                const body = document.getElementById('settings-body');
+                const actions = document.getElementById('settings-actions');
+                const title = document.getElementById('settings-title');
+
+                if (!body || !actions || !title) return;
+
+                switch (view) {
+                    case 'main':
+                        renderMainView(body, actions, title);
+                        break;
+                    case 'share':
+                        renderShareView(body, actions, title);
+                        break;
+                    case 'load':
+                        renderLoadView(body, actions, title);
+                        break;
+                }
+            }
+
+            function renderMainView(body, actions, title) {
+                title.textContent = '⚙️ イベント設定';
+                const settings = VingoSettings.load();
+                const currentSongs = settings.songs || songsMaster.map(s => s.title);
+
+                body.innerHTML = `
+                    <div class="settings-section">
+                        <label>イベント名</label>
+                        <input type="text" id="settings-event-name" maxlength="30" placeholder="イベント名を入力..." value="${escapeHtml(settings.eventName || '')}">
+                        <div class="settings-hint">1〜30文字（スクショに表示されます）</div>
+                    </div>
+                    <div class="settings-section">
+                        <label>主催者名（表示名）</label>
+                        <input type="text" id="settings-organizer-name" maxlength="20" placeholder="例：かい / ボカマインド運営" value="${escapeHtml(settings.organizerName || '')}">
+                        <div class="settings-hint">スクショ送付案内に表示されます。未入力で省略</div>
+                    </div>
+                    <div class="settings-section">
+                        <label>X（Twitter）送付先</label>
+                        <input type="text" id="settings-x-target" placeholder="@username または URL" value="${escapeHtml(settings.xTarget || '')}">
+                        <div class="settings-hint">未入力でVINGO時のボタンを非表示</div>
+                    </div>
+                    <div class="settings-section">
+                        <label>Instagram送付先</label>
+                        <input type="text" id="settings-ig-target" placeholder="username または URL" value="${escapeHtml(settings.igTarget || '')}">
+                        <div class="settings-hint">未入力でVINGO時のボタンを非表示</div>
+                    </div>
+                    <div class="settings-section">
+                        <label>候補曲リスト（1行1曲）</label>
+                        <textarea id="settings-songs" placeholder="曲名を1行ずつ入力...">${escapeHtml(currentSongs.join('\n'))}</textarea>
+                        <div class="song-count" id="song-count">曲数：${currentSongs.length}</div>
+                        <div class="settings-hint">9〜300曲（空行は無視）</div>
+                    </div>
+                `;
+
+                // Add song count updater
+                const textarea = document.getElementById('settings-songs');
+                const countEl = document.getElementById('song-count');
+                if (textarea && countEl) {
+                    textarea.addEventListener('input', () => {
+                        const lines = textarea.value.split('\n').filter(l => l.trim());
+                        countEl.textContent = '曲数：' + lines.length;
+                        if (lines.length < 9 || lines.length > 500) {
+                            countEl.classList.add('error');
+                        } else {
+                            countEl.classList.remove('error');
+                        }
+                    });
+                }
+
+                actions.innerHTML = `
+                    <button class="btn-primary" id="settings-save">💾 保存</button>
+                    <button class="btn-secondary" id="settings-share-link">🔗 共有リンクを作る</button>
+                    <button class="btn-secondary" id="settings-load">📥 共有リンクを読み込む</button>
+                    <button class="btn-danger" id="settings-reset">🗑️ 全てリセット</button>
+                `;
+
+                // Event listeners
+                document.getElementById('settings-save').addEventListener('click', handleSaveSettings);
+                document.getElementById('settings-share-link').addEventListener('click', () => open('share'));
+                document.getElementById('settings-load').addEventListener('click', () => open('load'));
+                document.getElementById('settings-reset').addEventListener('click', handleResetSettings);
+            }
+
+
+
+
+
+
+            function renderShareView(body, actions, title) {
+                title.textContent = '🔗 共有リンク';
+                const settings = VingoSettings.load();
+                const shareUrl = VingoSettings.getShareUrl(settings);
+
+                body.innerHTML = `
+                    <div class="share-code-area" id="share-url-text">${escapeHtml(shareUrl)}</div>
+                    <div class="settings-hint">このリンクを参加者に共有してください。<br>URLパラメータに設定が含まれています。</div>
+                `;
+
+                actions.innerHTML = `
+                   <button class="btn-primary" id="btn-copy-link">📋 リンクをコピー</button>
+                   <button class="settings-back" id="btn-back-main">← 設定に戻る</button>
+                `;
+
+                document.getElementById('btn-copy-link').addEventListener('click', () => {
+                    const text = document.getElementById('share-url-text').textContent;
+                    navigator.clipboard.writeText(text).then(() => {
+                        showToast('リンクをコピーしました', 'success');
+                    }).catch(() => {
+                        showToast('コピーできませんでした', 'error');
+                    });
+                });
+                document.getElementById('btn-back-main').addEventListener('click', () => open('main'));
+            }
+
+            function renderLoadView(body, actions, title) {
+                title.textContent = '📥 設定読み込み';
+
+                body.innerHTML = `
+                    <div class="settings-section">
+                        <label>共有リンクを貼り付け</label>
+                        <textarea id="load-code-input" placeholder="https://..."></textarea>
+                        <div class="settings-hint">送られてきた共有リンク（URL）を貼り付けてください。</div>
+                    </div>
+                 `;
+
+                actions.innerHTML = `
+                    <button class="btn-primary" id="btn-do-load">読み込む</button>
+                    <button class="settings-back" id="btn-back-main">← 設定に戻る</button>
+                 `;
+
+                document.getElementById('btn-do-load').addEventListener('click', handleLoadCode);
+                document.getElementById('btn-back-main').addEventListener('click', () => open('main'));
+            }
+
+            function handleSaveSettings() {
+                const nameInput = document.getElementById('settings-event-name');
+                const organizerInput = document.getElementById('settings-organizer-name');
+                const xInput = document.getElementById('settings-x-target');
+                const igInput = document.getElementById('settings-ig-target');
+                const songsInput = document.getElementById('settings-songs');
+
+                const settings = {
+                    v: 1,
+                    eventName: nameInput ? nameInput.value.trim() : '',
+                    organizerName: organizerInput ? organizerInput.value.trim() : '',
+                    xTarget: xInput ? xInput.value.trim() : '',
+                    igTarget: igInput ? igInput.value.trim() : '',
+                    songs: songsInput ? songsInput.value.split('\n').map(s => s.trim()).filter(s => s) : []
+                };
+
+                // Validate
+                if (settings.songs.length < 9) {
+                    showToast('曲数が不足しています（9曲以上必要）', 'error');
+                    return;
+                }
+                if (settings.songs.length > 500) {
+                    showToast('曲数が上限を超えています（500曲以下）', 'error');
+                    return;
+                }
+
+                VingoSettings.applySettings(settings);
+                showToast('設定を保存しました', 'success');
+
+                // Show notification about next random
+                if (state.locked) {
+                    showToast('次回ランダムから新しい曲リストが反映されます', '');
+                }
+            }
+
+            function handleResetSettings() {
+                if (confirm('全ての設定をリセットしますか？\n曲リストもデフォルトに戻ります。')) {
+                    VingoSettings.reset();
+                    showToast('設定をリセットしました', 'success');
+                    location.reload();
+                }
+            }
+
+            function handleLoadCode() {
+                const input = document.getElementById('load-code-input');
+                if (!input) return;
+
+                const inputStr = input.value.trim();
+                if (!inputStr) {
+                    showToast('URLを入力してください', 'error');
+                    return;
+                }
+
+                // Try to extract cfg from URL
+                let cfg = null;
+                try {
+                    const url = new URL(inputStr);
+                    cfg = url.searchParams.get('cfg') || url.searchParams.get('c') || url.searchParams.get('settings');
+                } catch (e) {
+                    // Not a URL, treat as raw cfg?
+                    if (!inputStr.startsWith('http')) {
+                        cfg = inputStr;
+                    }
+                }
+
+                if (!cfg) {
+                    showToast('有効な設定URLではありません', 'error');
+                    return;
+                }
+
+                applyCfg(cfg); // Apply using global function
+                close();
+            }
+
+            function escapeHtml(str) {
+                return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            }
+
+            return { open, close };
+        })();
+
+        /* =========================
+           INIT SETTINGS UI
+        ========================= */
+        function initSettingsUI() {
+            // Settings button
+            const settingsBtn = document.getElementById('settings-btn');
+            if (settingsBtn) {
+                settingsBtn.addEventListener('click', () => SettingsModal.open('main'));
+            }
+
+            // Close button
+            const closeBtn = document.getElementById('settings-close');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => SettingsModal.close());
+            }
+
+            // Load code link
+            const loadCodeLink = document.getElementById('load-code-link');
+            if (loadCodeLink) {
+                loadCodeLink.addEventListener('click', () => SettingsModal.open('load'));
+            }
+
+            // Close on overlay click
+            const overlay = document.getElementById('settings-modal');
+            if (overlay) {
+                overlay.addEventListener('click', (e) => {
+                    if (e.target === overlay) {
+                        SettingsModal.close();
+                    }
+                });
+            }
+
+            // Apply saved settings on load
+            const settings = VingoSettings.load();
+            if (settings.eventName) {
+                const textEl = document.getElementById('event-name-text');
+                if (textEl) textEl.textContent = settings.eventName;
+            }
+            updateSnsLinks(settings);
+            updateOrganizerNameDisplay(settings.organizerName);
+
+            // Note: checkUrlSettings is called in initWelcomeUI now
+        }
+
+
 
     </script>
 </body>
