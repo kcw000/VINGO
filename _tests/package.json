@@ -1,0 +1,16 @@
+{
+  "name": "vingo-regression-tests",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22 <23 || >=24 <25 || >=26 <27", "npm": ">=10" },
+  "scripts": {
+    "install:browser": "node scripts/run-playwright.mjs install chromium --only-shell",
+    "test": "node scripts/run-playwright.mjs test --project=normal",
+    "test:known": "node scripts/run-playwright.mjs test --project=known-issues",
+    "test:all": "node scripts/run-playwright.mjs test",
+    "check:pages": "node scripts/check-pages.mjs",
+    "check:reporting": "node scripts/check-reporting.mjs"
+  },
+  "devDependencies": { "@playwright/test": "1.65.0" }
+}
