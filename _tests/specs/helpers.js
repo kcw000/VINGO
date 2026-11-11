@@ -38,14 +38,12 @@ export const test = base.extend({
     if (clockMode === 'fixed') await page.clock.setFixedTime(fixedTime);
     await use(page);
   },
-  allowMalformedSettingsError: [false, { option: true }],
-  audit: [async ({ context, allowMalformedSettingsError }, use) => {
+  audit: [async ({ context }, use) => {
     const { errors, consoleErrors, external } = await prepareContext(context);
     await use({ errors });
     expect(external, 'テスト中に外部サイトへ接続しない').toEqual([]);
     expect(consoleErrors, 'ブラウザconsole.errorなし').toEqual([]);
-    const unexpected = allowMalformedSettingsError ? errors.filter(e => !/name\.trim is not a function/.test(e)) : errors;
-    expect(unexpected, '想定外のJavaScript例外なし').toEqual([]);
+    expect(errors, 'JavaScript例外なし').toEqual([]);
   }, { auto: true }],
 });
 
