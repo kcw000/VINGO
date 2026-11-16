@@ -3169,34 +3169,53 @@
             }
 
             function validateSettings(settings) {
-                if (!settings || typeof settings !== 'object') {
+                if (!settings || typeof settings !== 'object' || Array.isArray(settings)) {
                     return { valid: false, error: "無効なデータ形式です" };
                 }
 
-                // Fallback for missing v
-                if (settings.v === undefined) settings.v = 1;
+                // Older links may omit v and optional fields. Match load() defaults.
+                if (settings.v !== undefined && settings.v !== 1) {
+                    return { valid: false, error: "この設定データのバージョンには対応していません" };
+                }
+                const validated = { ...DEFAULT_SETTINGS };
+                const textFields = [
+                    ['eventName', 'イベント名', 30],
+                    ['organizerName', '主催者名', 20],
+                    ['xTarget', 'X送付先', null],
+                    ['igTarget', 'Instagram送付先', null]
+                ];
+                for (const [key, label, maxLength] of textFields) {
+                    const value = settings[key];
+                    if (value === undefined) continue;
+                    if (typeof value !== 'string') {
+                        return { valid: false, error: `${label}は文字列で指定してください` };
+                    }
+                    if (maxLength !== null && value.length > maxLength) {
+                        return { valid: false, error: `${label}は${maxLength}文字以内で指定してください` };
+                    }
+                    validated[key] = value;
+                }
 
-                if (settings.songs) {
+                // null / omitted songs select the built-in list; other values need validation.
+                if (settings.songs !== undefined && settings.songs !== null) {
                     if (!Array.isArray(settings.songs)) {
                         return { valid: false, error: "曲リストの形式が正しくありません" };
                     }
-                    // Limit songs to 300 (per spec) and filter
-                    let validSongs = settings.songs.filter(s => s && typeof s === 'string' && s.trim());
+                    if (settings.songs.some(s => typeof s !== 'string')) {
+                        return { valid: false, error: "曲名は文字列で指定してください" };
+                    }
+                    // Keep the existing limit until BUG-001 is addressed separately.
+                    let validSongs = settings.songs.filter(s => s.trim());
                     if (validSongs.length > 300) {
                         validSongs = validSongs.slice(0, 300);
                     }
                     if (validSongs.length < 9) {
                         return { valid: false, error: "曲数が不足しています（9曲以上必要）" };
                     }
-                    settings.songs = validSongs;
+                    validated.songs = validSongs;
                 }
 
-                // Event name limit
-                if (settings.eventName && settings.eventName.length > 30) {
-                    settings.eventName = settings.eventName.substring(0, 30);
-                }
-
-                return { valid: true, settings: settings };
+                return { valid: true, settings: validated };
             }
 
             function applySettings(settings) {

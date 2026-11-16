@@ -51,4 +51,4 @@ for (const [id, expectedCode] of [['BUG-900', 0], ['BUG-901', 1], ['BUG-902', 1]
   assert(result.stdout.includes(message), `${id}: wrong classification; evidence ${directory}`);
   console.log(`${id}: 終了コード${result.status}・分類確認 合格`);
 }
-console.log(`レポート機構の5確認 合格。これはVINGOの66ケースとは別。証拠：${directory}`);
+console.log(`レポート機構の5確認 合格。これはVINGOのアプリ試験とは別。証拠：${directory}`);

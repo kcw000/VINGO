@@ -47,21 +47,6 @@ for (const theme of ['ren', 'luka', 'meiko']) {
   });
 }
 
-test.describe('不正な共有設定', () => {
-  test.use({ allowMalformedSettingsError: true });
-  test('BUG-003：型不正を保存前に拒否し例外停止しない', async ({ page, audit }) => {
-    const previous = settings(9);
-    await saveSettings(page, previous);
-    await page.locator('#settings-close').click();
-    await page.locator('#btn-input-link').click();
-    const code = Buffer.from(JSON.stringify(settings(9, { organizerName: 42 }))).toString('base64url');
-    await page.locator('#load-code-input').fill(`${baseURL}?v=1&cfg=${code}`);
-    await page.locator('#btn-do-load').click();
-    expectKnownIssue({ saved: await stored(page), errors: audit.errors }, 'BUG-003', '型検証で既存設定と動作を保護する')
-      .toEqual({ saved: previous, errors: [] });
-  });
-});
-
 test('BUG-004：同名9行を9種類の曲として保存しない', async ({ page }) => {
   const previous = settings(9);
   await saveSettings(page, previous);
