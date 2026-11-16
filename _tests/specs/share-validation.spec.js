@@ -62,7 +62,7 @@ for (const mode of ['URL自動読み込み', 'リンク貼り付け']) {
       await expect(page.locator('#toast')).toHaveClass(/error/);
       await expect(page.locator('#toast')).toContainText(item.error);
       await expect(page.locator('#event-name-text')).toHaveText(previous.eventName);
-      // BUG-007 still governs whether the failed paste leaves its modal open.
+      // Invalid input remains editable (BUG-007); close it to verify game continuity.
       if (await page.locator('#settings-modal').isVisible()) await page.locator('#settings-close').click();
       await lockCard(page);
       expect((await page.locator('#grid .cell span').allTextContents()).sort()).toEqual([...previous.songs].sort());
@@ -70,7 +70,8 @@ for (const mode of ['URL自動読み込み', 'リンク貼り付け']) {
       await page.goto(baseURL);
       expect(await stored(page)).toEqual(previous);
       await expect(page.locator('#event-name-text')).toHaveText(previous.eventName);
-      await lockCard(page);
+      await expect(page.locator('#status-text')).toHaveText('確定済み');
+      expect((await page.locator('#grid .cell span').allTextContents()).sort()).toEqual([...previous.songs].sort());
     });
   }
 }

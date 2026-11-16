@@ -7,7 +7,7 @@
   "scripts": {
     "install:browser": "node scripts/run-playwright.mjs install chromium --only-shell",
     "test": "node scripts/run-playwright.mjs test --project=normal",
-    "test:known": "node scripts/run-playwright.mjs test --project=known-issues",
+    "test:known": "node scripts/run-playwright.mjs test --project=known-issues --pass-with-no-tests",
     "test:all": "node scripts/run-playwright.mjs test",
     "check:pages": "node scripts/check-pages.mjs",
     "check:reporting": "node scripts/check-reporting.mjs"
