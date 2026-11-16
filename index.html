@@ -5,6 +5,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VOCALOID BINGO</title>
+    <meta name="description" content="音楽イベントをもっと楽しく。好きな曲で3×3のカードを作り、流れた曲をチェックする楽曲ビンゴ「VINGO」。">
+    <link rel="canonical" href="https://kcw000.github.io/VINGO/">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="VINGO｜VOCALOID BINGO">
+    <meta property="og:description" content="好きな曲でカードを作り、流れた曲をチェック。イベント設定を共有して楽しめる楽曲ビンゴです。">
+    <meta property="og:url" content="https://kcw000.github.io/VINGO/">
+    <meta property="og:image" content="https://kcw000.github.io/VINGO/ogp.png">
+    <meta name="twitter:card" content="summary_large_image">
     <style>
         /* ========================================
            LAYERS (z-index)
@@ -607,6 +615,16 @@
             border: 4px solid #111 !important;
             background: rgba(255, 255, 180, 0.7) !important;
             box-shadow: inset 0 0 0 2px #fff, 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        body.theme-ren .cell.bingo-line,
+        body.theme-luka .cell.bingo-line,
+        body.theme-meiko .cell.bingo-line {
+            color: #111;
+        }
+
+        body:is(.theme-ren, .theme-luka, .theme-meiko) :is(.sns-title, .vingo-timestamp, .instructions, .instructions h3) {
+            color: var(--text);
         }
 
         /* --- SNS SECTION --- */
@@ -2314,6 +2332,7 @@
             celebrationShown: false,
             confettiRunning: false
         };
+        let settingsLoading = false;
 
         /* ========================================
            CONSTANTS
@@ -2394,11 +2413,11 @@
         }
 
         function randomize() {
-            if (state.locked) return;
+            if (state.locked || settingsLoading) return;
 
             const songs = typeof getSongsMaster === 'function' ? getSongsMaster() : songsMaster;
             if (songs.length < 9) {
-                alert('曲数が足りません（9曲以上必要）');
+                showToast('候補曲を確認してください。重複のない9〜300曲が必要です。保存済みの入力は設定画面に残しています。', 'error');
                 return;
             }
 
@@ -2428,6 +2447,7 @@
             render();
             updateHint();
             updateStepIndicator();
+            BoardStore.save();
         }
 
         // UI/UX ENHANCE: Apply subtle visual variation
@@ -2443,6 +2463,7 @@
         }
 
         function lock() {
+            if (settingsLoading) return;
             if (!state.grid || state.grid.length === 0) {
                 showHint('先に［ランダム］を押してください', true);
                 return;
@@ -2458,10 +2479,13 @@
             render();
             updateHint();
             updateStepIndicator();
+            BoardStore.save();
         }
 
         function reset() {
+            if (settingsLoading) return;
             if (confirm('盤面をリセットしますか？')) {
+                if (!BoardStore.clear()) return;
                 state.grid = [];
                 state.locked = false;
                 state.marks.fill(false);
@@ -2485,6 +2509,7 @@
         }
 
         function toggleMark(index) {
+            if (settingsLoading) return;
             if (!state.locked) {
                 showHint('※○を付けるには［確定］が必要です', true);
                 return;
@@ -2505,6 +2530,7 @@
 
             render();
             updateStepIndicator();
+            BoardStore.save();
         }
 
         function checkBingo() {
@@ -2766,28 +2792,32 @@
            DISPLAY LOGIC
            ======================================== */
 
+        let celebrationStartTimer, celebrationEndTimer;
         function showCelebration() {
+            hideCelebration();
             state.celebrationShown = true;
             els.celebrationOverlay.classList.add('visible');
 
             // UI/UX ENHANCE: VINGO phase styling
             document.body.classList.add('vingo-phase');
 
-            setTimeout(() => startConfetti(), 200);
-            setTimeout(() => hideCelebration(), CELEBRATION_DURATION);
+            celebrationStartTimer = setTimeout(() => startConfetti(), 200);
+            celebrationEndTimer = setTimeout(() => hideCelebration(), CELEBRATION_DURATION);
         }
 
         function hideCelebration() {
+            clearTimeout(celebrationStartTimer);
+            clearTimeout(celebrationEndTimer);
             els.celebrationOverlay.classList.remove('visible');
             stopConfetti();
         }
 
         function replayCelebration() {
             if (!state.bingo) return;
-            stopConfetti();
+            hideCelebration();
             els.celebrationOverlay.classList.add('visible');
-            setTimeout(() => startConfetti(), 200);
-            setTimeout(() => hideCelebration(), CELEBRATION_DURATION);
+            celebrationStartTimer = setTimeout(() => startConfetti(), 200);
+            celebrationEndTimer = setTimeout(() => hideCelebration(), CELEBRATION_DURATION);
         }
 
         function showHint(message, isWarning = false) {
@@ -2810,8 +2840,8 @@
             els.statusText.textContent = state.locked ? '確定済み' : '未確定';
             els.statusText.className = `status-value ${state.locked ? 'locked' : 'unlocked'}`;
 
-            els.btnRandom.disabled = state.locked;
-            els.btnLock.disabled = state.locked || !state.grid || state.grid.length === 0;
+            els.btnRandom.disabled = settingsLoading || state.locked;
+            els.btnLock.disabled = settingsLoading || state.locked || !state.grid || state.grid.length === 0;
 
             const highlightedCells = getHighlightedCells();
             els.grid.innerHTML = '';
@@ -2864,6 +2894,8 @@
 
         // Diagnostics
         window.runDiagnostics = function () {
+            BoardStore.suspended = true;
+            try {
             console.log('=== VINGO Diagnostics ===');
             let allPassed = true;
 
@@ -2918,6 +2950,7 @@
             console.log('=========================');
             console.log(allPassed ? '✅ ALL TESTS PASSED' : '❌ SOME TESTS FAILED');
             return allPassed;
+            } finally { BoardStore.suspended = false; }
         };
 
 
@@ -2992,27 +3025,20 @@
            EVENT NAME SYSTEM
         ========================= */
         (function () {
-            const EVENT_NAME_KEY = "vingo_event_name";
             const DEFAULT_EVENT_NAME = "VINGO EVENT";
 
             let isEditing = false;
 
             function getEventName() {
-                try {
-                    return localStorage.getItem(EVENT_NAME_KEY) || DEFAULT_EVENT_NAME;
-                } catch (e) {
-                    return DEFAULT_EVENT_NAME;
-                }
+                return VingoSettings.load().eventName;
             }
 
             function saveEventName(name) {
-                try {
-                    if (name && name.trim()) {
-                        localStorage.setItem(EVENT_NAME_KEY, name.trim().slice(0, 30));
-                    } else {
-                        localStorage.removeItem(EVENT_NAME_KEY);
-                    }
-                } catch (e) { }
+                if (settingsLoading) return false;
+                const settings = VingoSettings.load();
+                settings.eventName = name.trim() || DEFAULT_EVENT_NAME;
+                settings.eventId = settings.eventId || VingoSettings.newEventId();
+                return VingoSettings.applySettings(settings);
             }
 
             function updateDisplay() {
@@ -3052,9 +3078,7 @@
                 const input = document.getElementById("event-name-input");
                 if (input) {
                     const value = input.value.trim();
-                    if (value) {
-                        saveEventName(value);
-                    }
+                    if (!saveEventName(value)) return;
                 }
                 updateDisplay();
                 closeEditor();
@@ -3062,9 +3086,7 @@
 
             function handleReset() {
                 if (confirm("イベント名をリセットしますか？")) {
-                    try {
-                        localStorage.removeItem(EVENT_NAME_KEY);
-                    } catch (e) { }
+                    if (!saveEventName(DEFAULT_EVENT_NAME)) return;
                     updateDisplay();
                     closeEditor();
                 }
@@ -3122,6 +3144,8 @@
         ========================= */
         const VingoSettings = (function () {
             const SETTINGS_KEY = "vingo_settings_json";
+            const MAX_SONGS = 300;
+            let loadWarningShown = false;
             const DEFAULT_SETTINGS = {
                 v: 1,
                 eventName: "VINGO EVENT",
@@ -3136,23 +3160,38 @@
                     const json = localStorage.getItem(SETTINGS_KEY);
                     if (json) {
                         const parsed = JSON.parse(json);
-                        return { ...DEFAULT_SETTINGS, ...parsed };
+                        const result = validateSettings(parsed, true);
+                        if (!result.valid) throw new Error(result.error);
+                        return result.settings;
                     }
-                } catch (e) { }
+                    const legacyName = localStorage.getItem('vingo_event_name');
+                    if (legacyName) return { ...DEFAULT_SETTINGS, eventName: legacyName };
+                } catch (e) {
+                    if (!loadWarningShown) showToast('保存設定を読み込めません。元データは残しています。設定を確認してください。', 'error');
+                    loadWarningShown = true;
+                }
                 return { ...DEFAULT_SETTINGS };
             }
 
             function save(settings) {
                 try {
                     localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-                } catch (e) { }
+                    return true;
+                } catch (e) {
+                    showToast('設定を保存できませんでした。空き容量やブラウザの保存許可を確認してください。入力内容は残っています。', 'error');
+                    return false;
+                }
             }
 
             function reset() {
                 try {
-                    localStorage.removeItem(SETTINGS_KEY);
                     localStorage.removeItem("vingo_event_name");
-                } catch (e) { }
+                    localStorage.removeItem(SETTINGS_KEY);
+                    return true;
+                } catch (e) {
+                    showToast('設定をリセットできませんでした。ブラウザの保存許可を確認してください。', 'error');
+                    return false;
+                }
             }
 
             function generateCode(settings) {
@@ -3168,7 +3207,7 @@
                 }
             }
 
-            function validateSettings(settings) {
+            function validateSettings(settings, allowLegacyStored = false) {
                 if (!settings || typeof settings !== 'object' || Array.isArray(settings)) {
                     return { valid: false, error: "無効なデータ形式です" };
                 }
@@ -3190,10 +3229,16 @@
                     if (typeof value !== 'string') {
                         return { valid: false, error: `${label}は文字列で指定してください` };
                     }
-                    if (maxLength !== null && value.length > maxLength) {
+                    if (!allowLegacyStored && maxLength !== null && value.length > maxLength) {
                         return { valid: false, error: `${label}は${maxLength}文字以内で指定してください` };
                     }
                     validated[key] = value;
+                }
+                if (settings.eventId !== undefined) {
+                    if (typeof settings.eventId !== 'string' || !/^[a-f0-9]{32}$/.test(settings.eventId)) {
+                        return { valid: false, error: 'イベントIDの形式が正しくありません' };
+                    }
+                    validated.eventId = settings.eventId;
                 }
 
                 // null / omitted songs select the built-in list; other values need validation.
@@ -3204,13 +3249,15 @@
                     if (settings.songs.some(s => typeof s !== 'string')) {
                         return { valid: false, error: "曲名は文字列で指定してください" };
                     }
-                    // Keep the existing limit until BUG-001 is addressed separately.
-                    let validSongs = settings.songs.filter(s => s.trim());
-                    if (validSongs.length > 300) {
-                        validSongs = validSongs.slice(0, 300);
+                    const validSongs = settings.songs.filter(s => s.trim());
+                    if (!allowLegacyStored && validSongs.length > MAX_SONGS) {
+                        return { valid: false, error: '曲数が上限を超えています（300曲以下）。入力内容を調整してください。' };
                     }
-                    if (validSongs.length < 9) {
+                    if (!allowLegacyStored && validSongs.length < 9) {
                         return { valid: false, error: "曲数が不足しています（9曲以上必要）" };
+                    }
+                    if (!allowLegacyStored && new Set(validSongs.map(s => s.trim())).size !== validSongs.length) {
+                        return { valid: false, error: '重複した曲名があります。重複行を確認してください（異なる曲が9曲以上必要）。' };
                     }
                     validated.songs = validSongs;
                 }
@@ -3219,23 +3266,26 @@
             }
 
             function applySettings(settings) {
-                save(settings);
+                const result = validateSettings(settings);
+                if (!result.valid) { showToast(result.error, 'error'); return false; }
+                settings = result.settings;
+                if (!save(settings)) return false;
                 // Update event name display
                 const textEl = document.getElementById("event-name-text");
-                if (textEl && settings.eventName) {
+                if (textEl) {
                     textEl.textContent = settings.eventName;
-                    try {
-                        localStorage.setItem("vingo_event_name", settings.eventName);
-                    } catch (e) { }
                 }
                 // Update organizer name in SNS step
                 updateOrganizerNameDisplay(settings.organizerName);
                 // Update SNS links
                 updateSnsLinks(settings);
+                BoardStore.activate(settings);
+                return true;
             }
 
             function getSongs() {
                 const settings = load();
+                if (!validateSettings(settings).valid) return [];
                 if (settings.songs && settings.songs.length >= 9) {
                     return settings.songs.filter(s => s && s.trim()).map((title, i) => ({ id: i + 1, title: title.trim() }));
                 }
@@ -3273,6 +3323,8 @@
 
             // --- Sharing ---
             function getShareUrl(settings) {
+                const result = validateSettings(settings);
+                if (!result.valid) throw new Error(result.error);
                 const json = generateCode(settings);
                 const base64 = base64UrlEncode(json);
                 const baseUrl = location.origin + location.pathname;
@@ -3284,10 +3336,154 @@
 
             return {
                 load, save, reset,
+                MAX_SONGS,
+                defaults: () => ({ ...DEFAULT_SETTINGS }),
+                newEventId: () => Array.from(crypto.getRandomValues(new Uint8Array(16)), n => n.toString(16).padStart(2, '0')).join(''),
                 generateCode, parseCode, validateSettings, applySettings,
                 getSongs, getCurrentSettingsForExport,
                 base64Decode, getShareUrl
             };
+        })();
+
+        // Progress is separate from shared settings. A canonical key avoids URL/encoding differences.
+        const BoardStore = (function () {
+            const PREFIX = 'vingo_progress_v1:';
+            let activeKey = null;
+            let warned = false;
+            const api = { suspended: false, activate, save, clear, keyFor };
+            function keyFor(s) {
+                return PREFIX + JSON.stringify([s.eventId || null, s.eventName, s.organizerName,
+                    s.xTarget, s.igTarget, (s.songs || songsMaster.map(song => song.title)).map(title => title.trim())]);
+            }
+            function clearMemory() {
+                Object.assign(state, { grid: [], locked: false, marks: new Array(9).fill(false),
+                    bingo: false, bingoLines: [], bingoAchievedAt: null, celebrationShown: false, confettiRunning: false });
+                els.app.classList.remove('focus-grid');
+                els.grid.classList.remove('grid-interactive');
+                document.body.classList.remove('vingo-phase');
+                stopConfetti();
+                hideCelebration();
+            }
+            function activate(settings, force = false) {
+                const nextKey = keyFor(settings);
+                if (!force && nextKey === activeKey) return;
+                activeKey = nextKey;
+                clearMemory();
+                try {
+                    const json = localStorage.getItem(activeKey);
+                    if (json) {
+                        const saved = JSON.parse(json);
+                        const pool = getSongsMaster();
+                        if (!saved || saved.v !== 1 || typeof saved.locked !== 'boolean' ||
+                            !Array.isArray(saved.grid) || saved.grid.length !== 9 ||
+                            !Array.isArray(saved.marks) || saved.marks.length !== 9 ||
+                            saved.marks.some(mark => typeof mark !== 'boolean') ||
+                            (!saved.locked && saved.marks.some(Boolean)) ||
+                            saved.grid.some(song => !song || !Number.isInteger(song.id) || typeof song.title !== 'string' ||
+                                !pool.some(candidate => candidate.id === song.id && candidate.title === song.title)) ||
+                            new Set(saved.grid.map(song => song.id)).size !== 9 ||
+                            (saved.achievedAt !== null && (typeof saved.achievedAt !== 'string' ||
+                                !Number.isFinite(Date.parse(saved.achievedAt)) || new Date(saved.achievedAt).toISOString() !== saved.achievedAt)) ||
+                            (BINGO_LINES.some(line => line.every(i => saved.marks[i])) && saved.achievedAt === null)) {
+                            throw new Error('Invalid progress');
+                        }
+                        state.grid = saved.grid;
+                        state.locked = saved.locked;
+                        state.marks = saved.marks;
+                        state.bingoAchievedAt = saved.achievedAt === null ? null : new Date(saved.achievedAt);
+                        checkBingo();
+                        state.celebrationShown = state.bingo;
+                        els.app.classList.toggle('focus-grid', state.locked);
+                        els.grid.classList.toggle('grid-interactive', state.locked);
+                        document.body.classList.toggle('vingo-phase', state.bingo);
+                    }
+                } catch (e) {
+                    showToast('途中経過を復元できませんでした。保存データは残しています。新しく抽選できます。', 'error');
+                }
+                render();
+                updateHint();
+                updateStepIndicator();
+            }
+            function save() {
+                if (api.suspended || !activeKey || state.grid.length !== 9 || settingsLoading) return;
+                // Never write a board under another tab's event settings.
+                if (keyFor(VingoSettings.load()) !== activeKey) return;
+                try {
+                    localStorage.setItem(activeKey, JSON.stringify({ v: 1, grid: state.grid, locked: state.locked,
+                        marks: state.marks, achievedAt: state.bingoAchievedAt ? state.bingoAchievedAt.toISOString() : null }));
+                    warned = false;
+                } catch (e) {
+                    if (!warned) showToast('途中経過を保存できません。再読み込みで失われるため、空き容量や保存許可を確認してください。', 'error');
+                    warned = true;
+                }
+            }
+            function clear(key = activeKey) {
+                try {
+                    if (key) localStorage.removeItem(key);
+                    return true;
+                } catch (e) {
+                    showToast('途中経過をリセットできませんでした。ブラウザの保存許可を確認してください。', 'error');
+                    return false;
+                }
+            }
+            return api;
+        })();
+
+        // gzip is optional; v1 links remain readable and available for older browsers.
+        const ShareCodec = (function () {
+            const MAX_BYTES = 256 * 1024;
+            async function compactUrl(settings) {
+                const legacy = VingoSettings.getShareUrl(settings);
+                if (typeof CompressionStream !== 'function' || typeof DecompressionStream !== 'function') return legacy;
+                const bytes = new TextEncoder().encode(JSON.stringify(settings));
+                if (bytes.length > MAX_BYTES) return legacy;
+                try {
+                    const data = new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer());
+                    let binary = '';
+                    for (const byte of data) binary += String.fromCharCode(byte);
+                    const encoded = btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+                    if (encoded.length > 65536) return legacy;
+                    const compact = `${location.origin}${location.pathname}?v=2&cfgz=${encoded}`;
+                    return compact.length < legacy.length ? compact : legacy;
+                } catch (e) { return legacy; }
+            }
+            async function decode(code, compressed) {
+                if (!compressed) {
+                    const json = VingoSettings.base64Decode(code);
+                    if (!json) throw new Error('データの読み込みに失敗しました（デコード失敗）');
+                    return json;
+                }
+                if (typeof DecompressionStream !== 'function') {
+                    throw new Error('このブラウザは圧縮リンクに未対応です。ブラウザを更新するか、主催者に「互換リンク」を依頼してください。');
+                }
+                if (!/^[A-Za-z0-9_-]+$/.test(code) || code.length > 65536) throw new Error('圧縮リンクの形式または長さが正しくありません');
+                try {
+                    const bytes = Uint8Array.from(atob(code.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+                    const reader = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip')).getReader();
+                    const chunks = [];
+                    let length = 0;
+                    while (true) {
+                        const { value, done } = await reader.read();
+                        if (done) break;
+                        length += value.length;
+                        if (length > MAX_BYTES) { await reader.cancel(); throw new Error('Too large'); }
+                        chunks.push(value);
+                    }
+                    const output = new Uint8Array(length);
+                    let offset = 0;
+                    for (const chunk of chunks) { output.set(chunk, offset); offset += chunk.length; }
+                    return new TextDecoder('utf-8', { fatal: true }).decode(output);
+                } catch (e) { throw new Error('圧縮リンクが壊れているか、設定データが大きすぎます。主催者にリンクを確認してください。'); }
+            }
+            function fromParams(params) {
+                if (params.has('cfgz')) {
+                    if (params.get('v') !== '2') throw new Error('この共有リンクのバージョンには対応していません');
+                    return { code: params.get('cfgz'), compressed: true };
+                }
+                const code = params.get('cfg') || params.get('c') || params.get('settings');
+                return code ? { code, compressed: false } : null;
+            }
+            return { compactUrl, decode, fromParams };
         })();
 
         // Update organizer name in SNS step 2 text
@@ -3339,45 +3535,38 @@
         /* =========================
            URL PARAMETER & RESCUE
         ========================= */
-        function applyCfg(cfgStr) {
-            const jsonStr = VingoSettings.base64Decode(cfgStr);
-            if (!jsonStr) {
-                showRescueModal("データの読み込みに失敗しました（デコード失敗）");
-                return;
-            }
-
-            const result = VingoSettings.parseCode(jsonStr);
-            if (result.valid) {
-                VingoSettings.applySettings(result.settings);
-
-                // Clean URL
-                const newUrl = location.pathname; // Remove query
-                history.replaceState({}, '', newUrl);
-
+        async function applyCfg(cfgStr, compressed = false) {
+            if (settingsLoading) return false;
+            settingsLoading = true;
+            render();
+            try {
+                const result = VingoSettings.parseCode(await ShareCodec.decode(cfgStr, compressed));
+                if (!result.valid) throw new Error('設定データが無効です：' + result.error);
+                if (!VingoSettings.applySettings(result.settings)) return false;
+                history.replaceState({}, '', location.pathname);
                 showToast(`✅ イベント設定を読み込みました：${result.settings.eventName}`, 'success');
-
-                // Reload to refresh game contents if needed
-                setTimeout(() => {
-                    location.reload();
-                }, 1500);
-            } else {
-                showRescueModal("設定データが無効です：" + result.error);
+                setTimeout(() => location.reload(), 1500);
+                return true;
+            } catch (e) {
+                showRescueModal(e.message);
+                return false;
+            } finally {
+                settingsLoading = false;
+                render();
             }
         }
 
-        function checkUrlSettings() {
-            const params = new URLSearchParams(location.search);
-            const cfg = params.get('cfg') || params.get('c') || params.get('settings');
-
-            if (cfg) {
-                applyCfg(cfg);
-            }
+        async function checkUrlSettings() {
+            try {
+                const input = ShareCodec.fromParams(new URLSearchParams(location.search));
+                return input ? await applyCfg(input.code, input.compressed) : false;
+            } catch (e) { showRescueModal(e.message); return false; }
         }
 
         function showRescueModal(msg) {
             showToast('⚠️ ' + msg, 'error');
             // Show manual entry modal as rescue
-            SettingsModal.open('load');
+            if (!document.getElementById('settings-modal').classList.contains('visible')) SettingsModal.open('load');
             // Pre-fill error if possible or show help text
             const hint = document.querySelector('#load-code-view .settings-hint');
             if (hint) hint.textContent = "読み込みに失敗しました。共有リンクをコピーして貼り付けてください。";
@@ -3388,7 +3577,7 @@
         /* =========================
            INIT WELCOME UI
         ========================= */
-        function initWelcomeUI() {
+        async function initWelcomeUI() {
             // Link Input Button
             document.getElementById('btn-input-link')?.addEventListener('click', () => {
                 // Scroll to manual entry or open modal
@@ -3397,7 +3586,7 @@
             });
 
             // Check URL on init
-            checkUrlSettings();
+            if (!await checkUrlSettings()) BoardStore.activate(VingoSettings.load());
         }
 
         // Initialize settings UI after DOM ready
@@ -3414,8 +3603,14 @@
         init();
         const SettingsModal = (function () {
             let currentView = 'main';
+            let viewVersion = 0;
 
             function open(view = 'main') {
+                if (view === 'share') {
+                    const result = VingoSettings.validateSettings(VingoSettings.load());
+                    if (!result.valid) { showToast(result.error, 'error'); return; }
+                }
+                viewVersion++;
                 currentView = view;
                 const modal = document.getElementById('settings-modal');
                 if (modal) {
@@ -3426,6 +3621,7 @@
             }
 
             function close() {
+                viewVersion++;
                 const modal = document.getElementById('settings-modal');
                 if (modal) {
                     modal.classList.remove('visible');
@@ -3494,7 +3690,7 @@
                     textarea.addEventListener('input', () => {
                         const lines = textarea.value.split('\n').filter(l => l.trim());
                         countEl.textContent = '曲数：' + lines.length;
-                        if (lines.length < 9 || lines.length > 500) {
+                        if (lines.length < 9 || lines.length > VingoSettings.MAX_SONGS) {
                             countEl.classList.add('error');
                         } else {
                             countEl.classList.remove('error');
@@ -3521,30 +3717,38 @@
 
 
 
-            function renderShareView(body, actions, title) {
+            async function renderShareView(body, actions, title) {
+                const version = viewVersion;
                 title.textContent = '🔗 共有リンク';
                 const settings = VingoSettings.load();
-                const shareUrl = VingoSettings.getShareUrl(settings);
+                const legacyUrl = VingoSettings.getShareUrl(settings);
 
                 body.innerHTML = `
-                    <div class="share-code-area" id="share-url-text">${escapeHtml(shareUrl)}</div>
-                    <div class="settings-hint">このリンクを参加者に共有してください。<br>URLパラメータに設定が含まれています。</div>
+                    <div class="share-code-area" id="share-url-text">リンクを作成中…</div>
+                    <div class="settings-hint">保存済みの設定を共有します。<br>圧縮リンクはiOS 16.4以降などの対応ブラウザで開けます。古い端末には「互換リンク」を送ってください。</div>
                 `;
 
                 actions.innerHTML = `
-                   <button class="btn-primary" id="btn-copy-link">📋 リンクをコピー</button>
+                   <button class="btn-primary" id="btn-copy-link" disabled>📋 リンクをコピー</button>
+                   <button class="btn-secondary" id="btn-copy-legacy">📋 互換リンクをコピー</button>
                    <button class="settings-back" id="btn-back-main">← 設定に戻る</button>
                 `;
 
-                document.getElementById('btn-copy-link').addEventListener('click', () => {
-                    const text = document.getElementById('share-url-text').textContent;
-                    navigator.clipboard.writeText(text).then(() => {
+                async function copy(text) {
+                    try {
+                        await navigator.clipboard.writeText(text);
                         showToast('リンクをコピーしました', 'success');
-                    }).catch(() => {
+                    } catch (e) {
                         showToast('コピーできませんでした', 'error');
-                    });
-                });
+                    }
+                }
+                document.getElementById('btn-copy-link').addEventListener('click', () => copy(document.getElementById('share-url-text').textContent));
+                document.getElementById('btn-copy-legacy').addEventListener('click', () => copy(legacyUrl));
                 document.getElementById('btn-back-main').addEventListener('click', () => open('main'));
+                const shareUrl = await ShareCodec.compactUrl(settings);
+                if (version !== viewVersion) return;
+                document.getElementById('share-url-text').textContent = shareUrl;
+                document.getElementById('btn-copy-link').disabled = false;
             }
 
             function renderLoadView(body, actions, title) {
@@ -3568,6 +3772,7 @@
             }
 
             function handleSaveSettings() {
+                if (settingsLoading) return;
                 const nameInput = document.getElementById('settings-event-name');
                 const organizerInput = document.getElementById('settings-organizer-name');
                 const xInput = document.getElementById('settings-x-target');
@@ -3576,6 +3781,7 @@
 
                 const settings = {
                     v: 1,
+                    eventId: VingoSettings.load().eventId || VingoSettings.newEventId(),
                     eventName: nameInput ? nameInput.value.trim() : '',
                     organizerName: organizerInput ? organizerInput.value.trim() : '',
                     xTarget: xInput ? xInput.value.trim() : '',
@@ -3583,34 +3789,21 @@
                     songs: songsInput ? songsInput.value.split('\n').map(s => s.trim()).filter(s => s) : []
                 };
 
-                // Validate
-                if (settings.songs.length < 9) {
-                    showToast('曲数が不足しています（9曲以上必要）', 'error');
-                    return;
-                }
-                if (settings.songs.length > 500) {
-                    showToast('曲数が上限を超えています（500曲以下）', 'error');
-                    return;
-                }
-
-                VingoSettings.applySettings(settings);
+                if (!VingoSettings.applySettings(settings)) return;
                 showToast('設定を保存しました', 'success');
-
-                // Show notification about next random
-                if (state.locked) {
-                    showToast('次回ランダムから新しい曲リストが反映されます', '');
-                }
             }
 
             function handleResetSettings() {
+                if (settingsLoading) return;
                 if (confirm('全ての設定をリセットしますか？\n曲リストもデフォルトに戻ります。')) {
-                    VingoSettings.reset();
+                    if (!VingoSettings.reset()) return;
+                    if (!BoardStore.clear() || !BoardStore.clear(BoardStore.keyFor(VingoSettings.defaults()))) return;
                     showToast('設定をリセットしました', 'success');
                     location.reload();
                 }
             }
 
-            function handleLoadCode() {
+            async function handleLoadCode() {
                 const input = document.getElementById('load-code-input');
                 if (!input) return;
 
@@ -3621,24 +3814,22 @@
                 }
 
                 // Try to extract cfg from URL
-                let cfg = null;
+                let data = null;
                 try {
                     const url = new URL(inputStr);
-                    cfg = url.searchParams.get('cfg') || url.searchParams.get('c') || url.searchParams.get('settings');
+                    data = ShareCodec.fromParams(url.searchParams);
                 } catch (e) {
-                    // Not a URL, treat as raw cfg?
                     if (!inputStr.startsWith('http')) {
-                        cfg = inputStr;
-                    }
+                        data = { code: inputStr, compressed: false };
+                    } else { showToast(e.message, 'error'); return; }
                 }
 
-                if (!cfg) {
+                if (!data) {
                     showToast('有効な設定URLではありません', 'error');
                     return;
                 }
 
-                applyCfg(cfg); // Apply using global function
-                close();
+                if (await applyCfg(data.code, data.compressed)) close();
             }
 
             function escapeHtml(str) {
@@ -3682,14 +3873,24 @@
 
             // Apply saved settings on load
             const settings = VingoSettings.load();
-            if (settings.eventName) {
-                const textEl = document.getElementById('event-name-text');
-                if (textEl) textEl.textContent = settings.eventName;
-            }
+            const textEl = document.getElementById('event-name-text');
+            if (textEl) textEl.textContent = settings.eventName;
             updateSnsLinks(settings);
             updateOrganizerNameDisplay(settings.organizerName);
 
             // Note: checkUrlSettings is called in initWelcomeUI now
+            window.addEventListener('storage', (event) => {
+                if (event.storageArea !== localStorage || settingsLoading) return;
+                const current = VingoSettings.load();
+                if (event.key === 'vingo_settings_json' || event.key === null) {
+                    if (textEl) textEl.textContent = current.eventName;
+                    updateSnsLinks(current);
+                    updateOrganizerNameDisplay(current.organizerName);
+                    BoardStore.activate(current);
+                } else if (event.key === BoardStore.keyFor(current)) {
+                    BoardStore.activate(current, true);
+                }
+            });
         }
 
 

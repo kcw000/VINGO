@@ -1,3 +1,4 @@
+import { gunzipSync } from 'node:zlib';
 import { test as base, expect } from '@playwright/test';
 import { origin } from '../paths.mjs';
 
@@ -71,10 +72,14 @@ export async function saveSettings(page, data) {
   await fillSettings(page, data);
   await page.locator('#settings-save').click();
   await expect(page.locator('#toast')).toContainText('設定を保存しました');
-  expect(await stored(page)).toEqual(data);
+  const saved = await stored(page);
+  expect(saved.eventId).toMatch(/^[a-f0-9]{32}$/);
+  data.eventId = saved.eventId;
+  expect(saved).toEqual(data);
 }
 export async function shareUrl(page) {
   await page.locator('#settings-share-link').click();
+  await expect(page.locator('#share-url-text')).toHaveText(/^https?:/);
   const url = await page.locator('#share-url-text').innerText();
   expect(new URL(url).origin).toBe(origin);
   expect(new URL(url).pathname).toBe('/VINGO/');
@@ -90,7 +95,9 @@ export async function mark(page, indexes) {
   for (const i of indexes) await page.locator('#grid .cell').nth(i).click();
 }
 export function decodeLink(url) {
-  return JSON.parse(Buffer.from(new URL(url).searchParams.get('cfg'), 'base64url').toString('utf8'));
+  const params = new URL(url).searchParams;
+  const bytes = Buffer.from(params.get('cfgz') || params.get('cfg'), 'base64url');
+  return JSON.parse((params.has('cfgz') ? gunzipSync(bytes) : bytes).toString('utf8'));
 }
 export async function acceptReset(page, selector) {
   page.once('dialog', dialog => dialog.accept());
